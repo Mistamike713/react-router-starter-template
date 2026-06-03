@@ -24,16 +24,17 @@ export default function Home() {
       />
 
       <h1
-        style={{
-          fontSize: "4rem",
-          letterSpacing: "0.15em",
-          margin: 0,
-          color: "#1f1f1f",
-          fontWeight: 800,
-        }}
-      >
-        MNH CREATIONS
-      </h1>
+  style={{
+    fontSize: "clamp(2.5rem, 8vw, 4rem)",
+    letterSpacing: "-0.02em",
+    margin: 0,
+    color: "#1f1f1f",
+    fontWeight: 900,
+    lineHeight: 1,
+  }}
+>
+  MNH Creations
+</h1>
 
       <p
         style={{
