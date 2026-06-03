@@ -14,15 +14,9 @@ export default function Home() {
       }}
     >
       <img
-        src="/logo.png"
-        alt="MNH Creations Logo"
-        style={{
-          maxWidth: "420px",
-          width: "90%",
-          height: "auto",
-          marginBottom: "2rem",
-        }}
-      />
+  src="/logo.PNG"
+  alt="MNH Creations Logo"
+/>
 
       <h1
         style={{
