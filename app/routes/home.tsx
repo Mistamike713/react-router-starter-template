@@ -38,7 +38,7 @@ export default function Home() {
 
       <p
         style={{
-          fontSize: "1.5rem",
+          fontSize: "1.1rem",
           color: "#666",
           marginTop: "1rem",
           marginBottom: "2rem",
