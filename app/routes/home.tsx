@@ -66,17 +66,21 @@ export default function Home() {
           margin: 0,
         }}
       >
-        Contact us at{" "}
         <a
-          href="mailto:info@mnhcreations.com"
-          style={{
-            color: "#1f1f1f",
-            fontWeight: 700,
-            textDecoration: "none",
-          }}
-        >
-          info@mnhcreations.com
-        </a>
+  href="mailto:info@mnhcreations.com"
+  style={{
+    marginTop: "1.5rem",
+    display: "inline-block",
+    padding: "12px 24px",
+    backgroundColor: "#1f1f1f",
+    color: "#ffffff",
+    textDecoration: "none",
+    borderRadius: "8px",
+    fontWeight: 700,
+  }}
+>
+  Contact Us
+</a>
       </p>
     </main>
   );
