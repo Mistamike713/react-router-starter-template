@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const CONTACT_EMAIL = "info@mnhcreations.com";
+const MAX_IMAGE_BYTES = 8 * 1024 * 1024; // 8MB, matches the server-side limit
 
 type ProductOption = {
 	label: string;
@@ -95,6 +96,20 @@ const steps = [
 export default function Home() {
 	const [selectedOption, setSelectedOption] = useState("");
 	const [formNote, setFormNote] = useState("");
+	const [imageFile, setImageFile] = useState<File | null>(null);
+	const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+	const [imageError, setImageError] = useState("");
+	const [isSubmitting, setIsSubmitting] = useState(false);
+
+	useEffect(() => {
+		if (!imageFile) {
+			setImagePreviewUrl(null);
+			return;
+		}
+		const objectUrl = URL.createObjectURL(imageFile);
+		setImagePreviewUrl(objectUrl);
+		return () => URL.revokeObjectURL(objectUrl);
+	}, [imageFile]);
 
 	const handleInquire = (value: string) => {
 		setSelectedOption(value);
@@ -102,12 +117,54 @@ export default function Home() {
 		document.getElementById("name")?.focus({ preventScroll: true });
 	};
 
-	const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+	const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+		const file = event.target.files?.[0] ?? null;
+		if (!file) {
+			setImageFile(null);
+			setImageError("");
+			return;
+		}
+		if (!file.type.startsWith("image/")) {
+			setImageFile(null);
+			setImageError("Please choose an image file.");
+			event.target.value = "";
+			return;
+		}
+		if (file.size > MAX_IMAGE_BYTES) {
+			setImageFile(null);
+			setImageError("That image is too large — please choose one under 8MB.");
+			event.target.value = "";
+			return;
+		}
+		setImageError("");
+		setImageFile(file);
+	};
+
+	const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
 		const form = event.currentTarget;
 		if (!form.checkValidity()) {
 			form.reportValidity();
 			return;
+		}
+
+		setIsSubmitting(true);
+		setFormNote("");
+
+		let imageUrl: string | null = null;
+		if (imageFile) {
+			try {
+				const uploadData = new FormData();
+				uploadData.set("image", imageFile);
+				const response = await fetch("/api/upload", { method: "POST", body: uploadData });
+				if (!response.ok) throw new Error("Upload failed");
+				const result = (await response.json()) as { url: string };
+				imageUrl = result.url;
+			} catch {
+				setIsSubmitting(false);
+				setFormNote("Couldn't upload your image — please try again, or send the order without it.");
+				return;
+			}
 		}
 
 		const formData = new FormData(form);
@@ -120,9 +177,11 @@ export default function Home() {
 			"",
 			"Details:",
 			(formData.get("message") as string) || "(none provided)",
+			...(imageUrl ? ["", `Reference image: ${imageUrl}`] : []),
 		].join("\n");
 
 		window.location.href = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+		setIsSubmitting(false);
 		setFormNote("Opening your email app to send this order request...");
 	};
 
@@ -351,11 +410,33 @@ export default function Home() {
 								/>
 							</div>
 
+							<div className="mb-4 flex flex-col gap-1.5">
+								<label htmlFor="image" className="text-sm font-bold">Reference image (optional)</label>
+								<input
+									type="file"
+									id="image"
+									name="image"
+									accept="image/*"
+									onChange={handleImageChange}
+									className="rounded-[14px] border-[1.5px] border-[#F4E9D8] bg-[#FFF7EC] px-3 py-2.5 text-[0.85rem] file:mr-3 file:rounded-full file:border-0 file:bg-[#C9713D] file:px-3 file:py-1.5 file:text-sm file:font-bold file:text-white"
+								/>
+								<p className="text-[0.8rem] text-[#7A5C46]">A photo, design idea, or inspiration pic — up to 8MB.</p>
+								{imagePreviewUrl && (
+									<img
+										src={imagePreviewUrl}
+										alt="Selected reference"
+										className="mt-1 h-24 w-24 rounded-[14px] object-cover"
+									/>
+								)}
+								{imageError && <p className="text-[0.8rem] font-bold text-[#C9528C]">{imageError}</p>}
+							</div>
+
 							<button
 								type="submit"
-								className="rounded-full bg-[#C9713D] px-6 py-3 text-sm font-extrabold text-white transition hover:bg-[#A85B2E]"
+								disabled={isSubmitting}
+								className="rounded-full bg-[#C9713D] px-6 py-3 text-sm font-extrabold text-white transition hover:bg-[#A85B2E] disabled:cursor-not-allowed disabled:opacity-60"
 							>
-								Send Order Inquiry
+								{isSubmitting ? "Sending..." : "Send Order Inquiry"}
 							</button>
 							<p role="status" className="mt-3 min-h-[1.2em] text-[0.88rem] text-[#8A9A5B]">
 								{formNote}
