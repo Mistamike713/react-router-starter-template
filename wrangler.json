@@ -10,5 +10,11 @@
 	"upload_source_maps": true,
 	"vars": {
 		"VALUE_FROM_CLOUDFLARE": "Hello from Cloudflare"
-	}
+	},
+	"kv_namespaces": [
+		{
+			"binding": "ORDER_UPLOADS",
+			"id": "95f3cf41bf2442a1afe42a03b5cd605e"
+		}
+	]
 }
