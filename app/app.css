@@ -19,11 +19,8 @@ body {
 
 /*
  * MNH homepage branding treatment.
- *
- * Keep the upper-right logo/circle as a true fixed background layer while
- * every piece of page content paints above it. This avoids the watermark
- * drifting over cards/text as the document scrolls and is more reliable on
- * iOS than background-attachment: fixed.
+ * The artwork stays fixed behind the page while its outer edge is feathered
+ * into the warm page background so the source image never reads as a square.
  */
 body:has(main#top) div[aria-hidden="true"][style*="radial-gradient"] {
 	top: -4.75rem !important;
@@ -33,21 +30,27 @@ body:has(main#top) div[aria-hidden="true"][style*="radial-gradient"] {
 	z-index: 0 !important;
 	background: radial-gradient(
 		circle at 38% 42%,
-		#f4e3d7 0%,
-		#edcfbd 50%,
-		#dfad8d 100%
+		#f5dfd1 0%,
+		#efc9b2 46%,
+		#e3a782 76%,
+		rgb(223 163 126 / 0.16) 94%,
+		transparent 100%
 	) !important;
-	box-shadow:
-		0 0 72px 28px rgb(255 247 236 / 0.32),
-		inset 0 0 0 1px rgb(74 55 40 / 0.025);
+	box-shadow: none;
 }
 
 body:has(main#top) div[aria-hidden="true"][style*="radial-gradient"] > img[src="/logo.PNG"] {
-	width: 72% !important;
-	height: 72% !important;
-	opacity: 0.36 !important;
+	width: 78% !important;
+	height: 78% !important;
+	opacity: 0.56 !important;
 	mix-blend-mode: multiply !important;
-	filter: grayscale(28%) sepia(24%) saturate(72%) brightness(1.08) contrast(0.68) !important;
+	filter: sepia(12%) saturate(138%) brightness(1.08) contrast(0.82) !important;
+	-webkit-mask-image: radial-gradient(ellipse at center, #000 0%, #000 56%, rgb(0 0 0 / 0.92) 68%, rgb(0 0 0 / 0.55) 80%, transparent 96%);
+	mask-image: radial-gradient(ellipse at center, #000 0%, #000 56%, rgb(0 0 0 / 0.92) 68%, rgb(0 0 0 / 0.55) 80%, transparent 96%);
+	-webkit-mask-repeat: no-repeat;
+	mask-repeat: no-repeat;
+	-webkit-mask-size: 100% 100%;
+	mask-size: 100% 100%;
 }
 
 /* Keep all actual homepage UI above the fixed branding layer at all times. */
