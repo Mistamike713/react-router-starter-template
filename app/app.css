@@ -19,8 +19,8 @@ body {
 
 /*
  * MNH homepage branding treatment.
- * The artwork stays fixed behind the page while its outer edge is feathered
- * into the warm page background so the source image never reads as a square.
+ * Fixed behind the page with a long, soft feather so neither the artwork
+ * source bounds nor the decorative circle has a perceptible hard edge.
  */
 body:has(main#top) div[aria-hidden="true"][style*="radial-gradient"] {
 	top: -4.75rem !important;
@@ -31,22 +31,24 @@ body:has(main#top) div[aria-hidden="true"][style*="radial-gradient"] {
 	background: radial-gradient(
 		circle at 38% 42%,
 		#f5dfd1 0%,
-		#efc9b2 46%,
-		#e3a782 76%,
-		rgb(223 163 126 / 0.16) 94%,
+		#efc9b2 40%,
+		#e5ae8b 66%,
+		rgb(228 174 139 / 0.58) 78%,
+		rgb(235 194 168 / 0.28) 88%,
+		rgb(246 226 210 / 0.08) 96%,
 		transparent 100%
 	) !important;
 	box-shadow: none;
 }
 
 body:has(main#top) div[aria-hidden="true"][style*="radial-gradient"] > img[src="/logo.PNG"] {
-	width: 78% !important;
-	height: 78% !important;
+	width: 80% !important;
+	height: 80% !important;
 	opacity: 0.56 !important;
 	mix-blend-mode: multiply !important;
 	filter: sepia(12%) saturate(138%) brightness(1.08) contrast(0.82) !important;
-	-webkit-mask-image: radial-gradient(ellipse at center, #000 0%, #000 56%, rgb(0 0 0 / 0.92) 68%, rgb(0 0 0 / 0.55) 80%, transparent 96%);
-	mask-image: radial-gradient(ellipse at center, #000 0%, #000 56%, rgb(0 0 0 / 0.92) 68%, rgb(0 0 0 / 0.55) 80%, transparent 96%);
+	-webkit-mask-image: radial-gradient(ellipse at center, #000 0%, #000 44%, rgb(0 0 0 / 0.98) 54%, rgb(0 0 0 / 0.86) 64%, rgb(0 0 0 / 0.62) 74%, rgb(0 0 0 / 0.34) 84%, rgb(0 0 0 / 0.12) 92%, transparent 100%);
+	mask-image: radial-gradient(ellipse at center, #000 0%, #000 44%, rgb(0 0 0 / 0.98) 54%, rgb(0 0 0 / 0.86) 64%, rgb(0 0 0 / 0.62) 74%, rgb(0 0 0 / 0.34) 84%, rgb(0 0 0 / 0.12) 92%, transparent 100%);
 	-webkit-mask-repeat: no-repeat;
 	mask-repeat: no-repeat;
 	-webkit-mask-size: 100% 100%;
