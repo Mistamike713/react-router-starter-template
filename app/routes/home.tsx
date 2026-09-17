@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { CartWidget } from "~/components/cart/CartWidget";
+import { useCart } from "~/lib/cart/CartContext";
 
 const CONTACT_EMAIL = "info@mnhcreations.com";
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024; // 8MB, matches the server-side limit
@@ -94,12 +96,14 @@ const steps = [
 ];
 
 export default function Home() {
+	const cart = useCart();
 	const [selectedOption, setSelectedOption] = useState("");
 	const [formNote, setFormNote] = useState("");
 	const [imageFile, setImageFile] = useState<File | null>(null);
 	const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
 	const [imageError, setImageError] = useState("");
 	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [addedOption, setAddedOption] = useState<string | null>(null);
 
 	useEffect(() => {
 		if (!imageFile) {
@@ -115,6 +119,20 @@ export default function Home() {
 		setSelectedOption(value);
 		document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" });
 		document.getElementById("name")?.focus({ preventScroll: true });
+	};
+
+	const handleAddToCart = (product: Product, option: ProductOption) => {
+		cart.addItem({
+			kind: "simple_product",
+			productId: `${product.id}__${option.label}`.toLowerCase().replace(/[^a-z0-9]+/g, "_"),
+			name: `${product.name} — ${option.label}`,
+			quantity: 1,
+			unitPriceCents: option.price * 100,
+			config: { description: `${product.name} — ${option.label}` },
+		});
+		const key = optionValue(product.name, option);
+		setAddedOption(key);
+		setTimeout(() => setAddedOption((current) => (current === key ? null : current)), 1200);
 	};
 
 	const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -187,16 +205,44 @@ export default function Home() {
 
 	return (
 		<div className="bg-[#FFF7EC] text-[#4A3728]">
+			{/*
+				Branded background watermark: fixed to the viewport (not the hero
+				section) so it stays put while the page scrolls, instead of
+				scrolling away with the hero content. Deliberately `position: fixed`
+				rather than `background-attachment: fixed`, which is unreliable on
+				iOS Safari. Placed before <header> (a sibling, not a descendant) so
+				the header's `backdrop-blur` can never make it that element's
+				containing block, and outside any `overflow-hidden` ancestor so it
+				isn't clipped. `pointer-events-none` + z-0 keep it inert and behind
+				every interactive element; `html,body { overflow-x: hidden }`
+				(app.css) keeps its off-screen portion from causing horizontal
+				scroll on any viewport size.
+			*/}
+			<div
+				aria-hidden="true"
+				className="pointer-events-none fixed -top-28 -right-28 z-0 h-[420px] w-[420px] overflow-hidden rounded-full sm:-top-32 sm:-right-36 sm:h-[480px] sm:w-[480px] lg:h-[560px] lg:w-[560px]"
+				style={{ background: "radial-gradient(circle at 30% 30%, #F4E9D8, #C9713D 140%)" }}
+			>
+				<img
+					src="/logo.PNG"
+					alt=""
+					className="absolute inset-0 m-auto h-[62%] w-[62%] object-contain opacity-[0.16] mix-blend-luminosity"
+					style={{ filter: "grayscale(85%) brightness(0.5) contrast(0.85)" }}
+				/>
+			</div>
+
 			<header className="sticky top-0 z-20 border-b border-[#4A3728]/10 bg-[#FFF7EC]/90 backdrop-blur">
-				<div className="mx-auto flex max-w-[1100px] items-center justify-between px-6 py-3">
+				<div className="mx-auto flex max-w-[1100px] flex-wrap items-center justify-between gap-y-2 px-6 py-3">
 					<a href="#top" className="flex items-center gap-2.5">
 						<img src="/logo.PNG" alt="MNH Creations logo" width={44} height={44} className="h-11 w-11 object-contain" />
 						<span className="font-[family-name:var(--font-head)] text-lg font-semibold">MNH Creations</span>
 					</a>
-					<nav aria-label="Primary" className="flex gap-6 text-sm font-bold text-[#7A5C46]">
-						<a href="#products" className="hover:text-[#A85B2E]">Products</a>
+					<nav aria-label="Primary" className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm font-bold text-[#7A5C46] sm:gap-x-6">
+						<a href="#products" className="hover:text-[#A85B2E]">Tumblers</a>
+						<a href="/shirt-configurator" className="hover:text-[#A85B2E]">Custom Shirts</a>
 						<a href="#how-it-works" className="hover:text-[#A85B2E]">How It Works</a>
 						<a href="#contact" className="hover:text-[#A85B2E]">Contact</a>
+						<CartWidget />
 					</nav>
 				</div>
 			</header>
@@ -238,13 +284,6 @@ export default function Home() {
 							</div>
 						</div>
 					</div>
-					<div
-						aria-hidden="true"
-						className="absolute -top-32 -right-36 h-[480px] w-[480px] rounded-full opacity-50"
-						style={{
-							background: "radial-gradient(circle at 30% 30%, #F4E9D8, #C9713D 140%)",
-						}}
-					/>
 				</section>
 
 				<section id="products" className="py-16">
@@ -257,6 +296,37 @@ export default function Home() {
 						</p>
 
 						<div className="grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-7">
+							<article className="flex flex-col items-start rounded-[20px] border-2 border-[#C9713D] bg-white p-6 pt-7 shadow-[0_10px_30px_rgba(74,55,40,0.10)]">
+								<div className="mb-3 self-center" aria-hidden="true">
+									<svg viewBox="0 0 64 64" width="56" height="56">
+										<path
+											d="M20 6 L10 16 L16 24 L20 21 L20 58 L44 58 L44 21 L48 24 L54 16 L44 6 L38 6 C38 9 35 12 32 12 C29 12 26 9 26 6 Z"
+											fill="#C9713D"
+											stroke="#A85B2E"
+											strokeWidth="2"
+										/>
+									</svg>
+								</div>
+								<h3 className="self-center font-[family-name:var(--font-head)] text-[1.2rem] font-semibold">
+									Custom HTV / Sublimation Shirt
+								</h3>
+								<p className="min-h-[42px] text-[0.92rem] text-[#7A5C46]">
+									Build your own shirt: garment, size, color, print method, and design &mdash; priced live as you go.
+								</p>
+								<ul className="mt-2 mb-1 w-full list-none border-t border-[#F4E9D8] p-0">
+									<li className="flex items-baseline justify-between border-b border-[#F4E9D8] py-2.5 font-bold">
+										<span>Starting at</span>
+										<span className="font-[family-name:var(--font-head)] text-[1.05rem] text-[#A85B2E]">$16</span>
+									</li>
+								</ul>
+								<p className="mb-4.5 text-[0.8rem] text-[#7A5C46] italic">Subject to MNH Creations review &amp; approval</p>
+								<a
+									href="/shirt-configurator"
+									className="w-full rounded-full bg-[#C9713D] px-6 py-3 text-center text-sm font-extrabold text-white transition hover:bg-[#A85B2E]"
+								>
+									Start Customizing
+								</a>
+							</article>
 							{products.map((product) => (
 								<article
 									key={product.id}
@@ -271,12 +341,19 @@ export default function Home() {
 										{product.options.map((option) => (
 											<li
 												key={option.label}
-												className="flex items-baseline justify-between border-b border-[#F4E9D8] py-2.5 font-bold"
+												className="flex flex-wrap items-baseline justify-between gap-y-2 border-b border-[#F4E9D8] py-2.5 font-bold"
 											>
 												<span>{option.label}</span>
 												<span className="font-[family-name:var(--font-head)] text-[1.05rem] text-[#A85B2E]">
 													${option.price}
 												</span>
+												<button
+													type="button"
+													onClick={() => handleAddToCart(product, option)}
+													className="w-full rounded-full border-2 border-[#C9713D] px-3.5 py-1.5 text-center text-xs font-extrabold text-[#A85B2E] transition hover:bg-[#C9713D] hover:text-white"
+												>
+													{addedOption === optionValue(product.name, option) ? "Added!" : "Add to Cart"}
+												</button>
 											</li>
 										))}
 									</ul>
