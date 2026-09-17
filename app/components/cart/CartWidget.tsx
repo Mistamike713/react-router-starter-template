@@ -105,18 +105,20 @@ export function CartWidget() {
 								</button>
 							</div>
 
-							{items.length === 0 ? (
-								<p className="px-5 py-6 text-[#7A5C46]">Your cart is empty.</p>
-							) : (
-								<div className="min-h-0 flex-1 overflow-y-auto px-5">
-									{items.map((item) => (
-										<CartItemRow key={item.id} item={item} />
-									))}
-								</div>
-							)}
+							{/*
+								Everything except the totals/submit strip below scrolls
+								together (items, contact info, fulfillment, notes) so a
+								growing form never squeezes the item list to nothing —
+								only the compact summary + CTA stay pinned at the bottom.
+							*/}
+							<div className="min-h-0 flex-1 overflow-y-auto px-5">
+								{items.length === 0 ? (
+									<p className="py-6 text-[#7A5C46]">Your cart is empty.</p>
+								) : (
+									items.map((item) => <CartItemRow key={item.id} item={item} />)
+								)}
 
-							<div className="border-t border-[#F4E9D8] bg-white px-5 pt-4 pb-5">
-								<fieldset className="mb-3.5 flex flex-col gap-1.5">
+								<fieldset className="mt-2 mb-3.5 flex flex-col gap-1.5 border-t border-[#F4E9D8] pt-4">
 									<legend className="mb-0.5 text-sm font-bold">Your Contact Info</legend>
 									<input
 										type="text"
@@ -209,7 +211,7 @@ export function CartWidget() {
 									</div>
 								)}
 
-								<div className="mb-3.5 flex flex-col gap-1.5">
+								<div className="mb-1.5 flex flex-col gap-1.5">
 									<label htmlFor="cart-order-notes" className="text-sm font-bold">
 										Notes for MNH Creations
 									</label>
@@ -222,7 +224,9 @@ export function CartWidget() {
 										className="rounded-[14px] border-[1.5px] border-[#F4E9D8] bg-[#FFF7EC] px-3 py-2 text-sm"
 									/>
 								</div>
+							</div>
 
+							<div className="border-t border-[#F4E9D8] bg-white px-5 pt-4 pb-5">
 								<div className="flex justify-between py-1 text-sm">
 									<span>Subtotal</span>
 									<span>{formatCents(subtotalCents)}</span>

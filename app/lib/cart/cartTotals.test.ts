@@ -73,6 +73,35 @@ describe("cart totals recompute correctly across state changes", () => {
 		expect(getCartSubtotalCents(state)).toBe(8000);
 	});
 
+	test("a custom_tumbler cart item round-trips through JSON (localStorage persistence) without losing artwork/placement", () => {
+		let state = cartReducer(createEmptyCartState(), {
+			type: "ADD_ITEM",
+			item: {
+				kind: "custom_tumbler",
+				productId: "16oz-snow-globe",
+				name: "Custom Tumbler",
+				quantity: 2,
+				unitPriceCents: 2000,
+				reviewRequired: true,
+				reviewReasons: ["CUSTOM_TUMBLER_REVIEW"],
+				config: {
+					productId: "16oz-snow-globe",
+					finishOptionId: "snow_globe",
+					artwork: { key: "abc", url: "/uploads/abc", fileName: "wrap.png", mimeType: "image/png", artworkKind: "raster" },
+					placement: { widthIn: 6, heightIn: 3, centerXIn: 4, centerYIn: 1.6, aspectLocked: true, maxWidthIn: 8, maxHeightIn: 3.2 },
+					personalizationText: "Alex",
+				},
+			},
+		});
+
+		const restored: CartState = JSON.parse(JSON.stringify(state));
+
+		expect(restored.items[0].kind).toBe("custom_tumbler");
+		expect(restored.items[0].config).toEqual(state.items[0].config);
+		expect((restored.items[0].config as { artwork: { url: string } }).artwork.url).toBe("/uploads/abc");
+		expect(getCartSubtotalCents(restored)).toBe(4000);
+	});
+
 	test("duplicating a custom_tumbler item preserves its config and adds to the combined total", () => {
 		let state = cartReducer(createEmptyCartState(), {
 			type: "ADD_ITEM",
