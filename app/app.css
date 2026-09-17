@@ -17,7 +17,7 @@ body {
 	}
 }
 
-/* MNH fixed background branding: slightly deeper peach field for a closer logo blend. */
+/* MNH fixed background branding. Core color matches the logo image's native background. */
 body:has(main#top) div[aria-hidden="true"][style*="radial-gradient"] {
 	top: -4.75rem !important;
 	right: -4.75rem !important;
@@ -26,30 +26,30 @@ body:has(main#top) div[aria-hidden="true"][style*="radial-gradient"] {
 	z-index: 0 !important;
 	border-radius: 50% !important;
 	background: radial-gradient(
-		circle at 40% 43%,
-		#eac8b5 0%,
-		#e4b69c 30%,
-		rgb(216 160 127 / 0.88) 48%,
-		rgb(222 174 145 / 0.62) 63%,
-		rgb(232 197 174 / 0.36) 76%,
-		rgb(243 220 202 / 0.17) 87%,
-		rgb(251 239 228 / 0.05) 96%,
+		circle at 50% 50%,
+		#fef2e3 0%,
+		#fef2e3 52%,
+		rgb(254 242 227 / 0.88) 66%,
+		rgb(254 242 227 / 0.62) 77%,
+		rgb(254 242 227 / 0.34) 86%,
+		rgb(254 242 227 / 0.14) 93%,
 		transparent 100%
 	) !important;
 	box-shadow: none;
-	-webkit-mask-image: radial-gradient(circle at 50% 50%, #000 0%, #000 66%, rgb(0 0 0 / 0.86) 75%, rgb(0 0 0 / 0.52) 85%, rgb(0 0 0 / 0.16) 94%, transparent 100%);
-	mask-image: radial-gradient(circle at 50% 50%, #000 0%, #000 66%, rgb(0 0 0 / 0.86) 75%, rgb(0 0 0 / 0.52) 85%, rgb(0 0 0 / 0.16) 94%, transparent 100%);
+	-webkit-mask-image: radial-gradient(circle at center, #000 0%, #000 70%, rgb(0 0 0 / 0.9) 78%, rgb(0 0 0 / 0.62) 87%, rgb(0 0 0 / 0.28) 94%, transparent 100%);
+	mask-image: radial-gradient(circle at center, #000 0%, #000 70%, rgb(0 0 0 / 0.9) 78%, rgb(0 0 0 / 0.62) 87%, rgb(0 0 0 / 0.28) 94%, transparent 100%);
 }
 
 body:has(main#top) div[aria-hidden="true"][style*="radial-gradient"] > img[src="/logo.PNG"] {
 	width: 84% !important;
 	height: 84% !important;
-	opacity: 0.59 !important;
+	opacity: 0.64 !important;
 	border-radius: 50% !important;
-	mix-blend-mode: multiply !important;
-	filter: sepia(7%) saturate(146%) hue-rotate(-3deg) brightness(1.1) contrast(0.76) !important;
-	-webkit-mask-image: radial-gradient(circle at center, #000 0%, #000 25%, rgb(0 0 0 / 0.98) 34%, rgb(0 0 0 / 0.90) 43%, rgb(0 0 0 / 0.76) 52%, rgb(0 0 0 / 0.60) 61%, rgb(0 0 0 / 0.44) 69%, rgb(0 0 0 / 0.30) 76%, rgb(0 0 0 / 0.19) 82%, rgb(0 0 0 / 0.11) 87%, rgb(0 0 0 / 0.055) 91%, rgb(0 0 0 / 0.02) 94%, transparent 97%);
-	mask-image: radial-gradient(circle at center, #000 0%, #000 25%, rgb(0 0 0 / 0.98) 34%, rgb(0 0 0 / 0.90) 43%, rgb(0 0 0 / 0.76) 52%, rgb(0 0 0 / 0.60) 61%, rgb(0 0 0 / 0.44) 69%, rgb(0 0 0 / 0.30) 76%, rgb(0 0 0 / 0.19) 82%, rgb(0 0 0 / 0.11) 87%, rgb(0 0 0 / 0.055) 91%, rgb(0 0 0 / 0.02) 94%, transparent 97%);
+	mix-blend-mode: normal !important;
+	filter: none !important;
+	/* Preserve the logo's exact native colors and dissolve the source square into the matching field. */
+	-webkit-mask-image: radial-gradient(circle at center, #000 0%, #000 42%, rgb(0 0 0 / 0.98) 50%, rgb(0 0 0 / 0.90) 58%, rgb(0 0 0 / 0.76) 66%, rgb(0 0 0 / 0.58) 74%, rgb(0 0 0 / 0.40) 81%, rgb(0 0 0 / 0.24) 87%, rgb(0 0 0 / 0.12) 92%, rgb(0 0 0 / 0.045) 96%, transparent 100%);
+	mask-image: radial-gradient(circle at center, #000 0%, #000 42%, rgb(0 0 0 / 0.98) 50%, rgb(0 0 0 / 0.90) 58%, rgb(0 0 0 / 0.76) 66%, rgb(0 0 0 / 0.58) 74%, rgb(0 0 0 / 0.40) 81%, rgb(0 0 0 / 0.24) 87%, rgb(0 0 0 / 0.12) 92%, rgb(0 0 0 / 0.045) 96%, transparent 100%);
 	-webkit-mask-repeat: no-repeat;
 	mask-repeat: no-repeat;
 	-webkit-mask-size: 100% 100%;
