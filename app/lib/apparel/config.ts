@@ -186,6 +186,11 @@ export function getBasePriceCents(sizeId: string | null | undefined, fabric: Fab
 	return row[fabric];
 }
 
+/** Lowest base garment price across the whole table, for "Starting at $X" homepage copy. */
+export function getMinBasePriceCents(): number {
+	return Math.min(...Object.values(BASE_PRICE_TABLE_CENTS).flatMap((row) => Object.values(row)));
+}
+
 export type PrintableAreaIn = { width: number; height: number };
 
 /**

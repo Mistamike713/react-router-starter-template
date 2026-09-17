@@ -78,6 +78,11 @@ export function getTumblerFinishOption(product: TumblerProduct | null, finishId:
 	return product.finishOptions.find((o) => o.id === finishId) ?? null;
 }
 
+/** Lowest tumbler finish price across the whole catalog, for "Starting at $X" homepage copy. */
+export function getMinTumblerPriceCents(): number {
+	return Math.min(...TUMBLER_PRODUCTS.flatMap((p) => p.finishOptions.map((o) => o.priceCents)));
+}
+
 export const TUMBLER_DESIGN_SOURCE = {
 	UPLOAD_OWN: "upload_own",
 	CREATE_FOR_ME: "create_for_me",
