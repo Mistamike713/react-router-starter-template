@@ -30,6 +30,14 @@
 					"binding": "ORDER_UPLOADS",
 					"id": "d316248bd7924c54b4280ddc4e66f1e2"
 				}
+			],
+			"d1_databases": [
+				{
+					"binding": "ORDERS_DB",
+					"database_name": "mnhcreations-orders-preview",
+					"database_id": "a038c554-fc0b-4ea9-80ce-db50b9a7ab8d",
+					"migrations_dir": "migrations"
+				}
 			]
 		}
 	},
