@@ -17,11 +17,7 @@ body {
 	}
 }
 
-/*
- * MNH homepage branding treatment.
- * Fixed behind the page with an extra-long feather so the artwork and its
- * warm halo dissolve continuously into the page rather than showing bounds.
- */
+/* MNH fixed background branding: warm center with a very broad continuous fade. */
 body:has(main#top) div[aria-hidden="true"][style*="radial-gradient"] {
 	top: -4.75rem !important;
 	right: -4.75rem !important;
@@ -30,26 +26,29 @@ body:has(main#top) div[aria-hidden="true"][style*="radial-gradient"] {
 	z-index: 0 !important;
 	background: radial-gradient(
 		circle at 38% 42%,
-		#f5dfd1 0%,
-		#efc9b2 34%,
-		#e8b797 56%,
-		rgb(229 174 139 / 0.52) 70%,
-		rgb(235 194 168 / 0.30) 80%,
-		rgb(242 216 196 / 0.16) 88%,
-		rgb(250 239 226 / 0.06) 95%,
+		#f4ddd0 0%,
+		#efcbb7 28%,
+		rgb(234 190 164 / 0.88) 46%,
+		rgb(235 197 173 / 0.62) 60%,
+		rgb(239 207 186 / 0.40) 72%,
+		rgb(244 219 201 / 0.22) 82%,
+		rgb(248 230 215 / 0.11) 90%,
+		rgb(253 244 234 / 0.035) 97%,
 		transparent 100%
 	) !important;
 	box-shadow: none;
 }
 
 body:has(main#top) div[aria-hidden="true"][style*="radial-gradient"] > img[src="/logo.PNG"] {
-	width: 82% !important;
-	height: 82% !important;
-	opacity: 0.56 !important;
+	width: 84% !important;
+	height: 84% !important;
+	opacity: 0.59 !important;
 	mix-blend-mode: multiply !important;
-	filter: sepia(12%) saturate(138%) brightness(1.08) contrast(0.82) !important;
-	-webkit-mask-image: radial-gradient(ellipse at center, #000 0%, #000 34%, rgb(0 0 0 / 0.98) 44%, rgb(0 0 0 / 0.90) 54%, rgb(0 0 0 / 0.74) 64%, rgb(0 0 0 / 0.52) 74%, rgb(0 0 0 / 0.30) 83%, rgb(0 0 0 / 0.14) 90%, rgb(0 0 0 / 0.05) 96%, transparent 100%);
-	mask-image: radial-gradient(ellipse at center, #000 0%, #000 34%, rgb(0 0 0 / 0.98) 44%, rgb(0 0 0 / 0.90) 54%, rgb(0 0 0 / 0.74) 64%, rgb(0 0 0 / 0.52) 74%, rgb(0 0 0 / 0.30) 83%, rgb(0 0 0 / 0.14) 90%, rgb(0 0 0 / 0.05) 96%, transparent 100%);
+	/* Slightly warmer/rosier while preserving the original multicolor character. */
+	filter: sepia(8%) saturate(148%) hue-rotate(-3deg) brightness(1.09) contrast(0.78) !important;
+	/* Start feathering early; the final third is deliberately extremely gradual. */
+	-webkit-mask-image: radial-gradient(ellipse at center, #000 0%, #000 27%, rgb(0 0 0 / 0.98) 37%, rgb(0 0 0 / 0.91) 47%, rgb(0 0 0 / 0.79) 57%, rgb(0 0 0 / 0.64) 67%, rgb(0 0 0 / 0.47) 76%, rgb(0 0 0 / 0.30) 84%, rgb(0 0 0 / 0.17) 90%, rgb(0 0 0 / 0.08) 95%, rgb(0 0 0 / 0.025) 98%, transparent 100%);
+	mask-image: radial-gradient(ellipse at center, #000 0%, #000 27%, rgb(0 0 0 / 0.98) 37%, rgb(0 0 0 / 0.91) 47%, rgb(0 0 0 / 0.79) 57%, rgb(0 0 0 / 0.64) 67%, rgb(0 0 0 / 0.47) 76%, rgb(0 0 0 / 0.30) 84%, rgb(0 0 0 / 0.17) 90%, rgb(0 0 0 / 0.08) 95%, rgb(0 0 0 / 0.025) 98%, transparent 100%);
 	-webkit-mask-repeat: no-repeat;
 	mask-repeat: no-repeat;
 	-webkit-mask-size: 100% 100%;
@@ -64,7 +63,6 @@ body:has(main#top) footer {
 	z-index: 1;
 }
 
-/* The logo has been visually moved into the upper-right background circle. */
 body:has(main#top) main#top > section:first-child img[alt^="MNH Creations"] {
 	display: none;
 }
