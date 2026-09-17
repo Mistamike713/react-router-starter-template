@@ -1,12 +1,13 @@
 import { useSearchParams } from "react-router";
 import { SiteHeader } from "~/components/layout/SiteHeader";
-import { ShirtConfigurator } from "~/components/configurator/ShirtConfigurator";
+import { TumblerConfigurator } from "~/components/tumbler/TumblerConfigurator";
 
 const CONTACT_EMAIL = "info@mnhcreations.com";
 
-export default function ShirtConfiguratorPage() {
+export default function TumblerConfiguratorPage() {
 	const [searchParams] = useSearchParams();
 	const editItemId = searchParams.get("editId");
+	const initialProductId = searchParams.get("productId");
 
 	return (
 		<div className="bg-[#FFF7EC] text-[#4A3728]">
@@ -14,16 +15,16 @@ export default function ShirtConfiguratorPage() {
 
 			<main className="py-10">
 				<div className="mx-auto max-w-[1100px] px-6">
-					<p className="mb-1.5 text-xs font-extrabold tracking-[2px] text-[#8A9A5B] uppercase">Custom Apparel</p>
+					<p className="mb-1.5 text-xs font-extrabold tracking-[2px] text-[#8A9A5B] uppercase">Custom Tumblers</p>
 					<h1 className="font-[family-name:var(--font-head)] text-[clamp(1.7rem,4vw,2.4rem)] font-semibold">
-						Build Your Custom HTV / Sublimation Shirt
+						Build Your Custom Tumbler
 					</h1>
 					<p className="mt-2 mb-8 max-w-[640px] text-[#7A5C46]">
-						Pick your garment, size, color, and design below. Your price updates as you go. All custom production is
-						subject to MNH Creations review before printing.
+						Pick your tumbler and finish, add your design, and preview the wrap below. Your price updates as you go.
+						All custom production is subject to MNH Creations review before printing.
 					</p>
 
-					<ShirtConfigurator editItemId={editItemId} />
+					<TumblerConfigurator editItemId={editItemId} initialProductId={initialProductId} />
 				</div>
 			</main>
 
@@ -31,7 +32,7 @@ export default function ShirtConfiguratorPage() {
 				<div className="mx-auto flex max-w-[1100px] flex-wrap items-center justify-between gap-1.5 px-6 text-sm">
 					<div>
 						<p>&copy; {new Date().getFullYear()} MNH Creations. All rights reserved.</p>
-						<p className="text-[#F4E9D8]/65">Custom apparel orders are reviewed by MNH Creations before production.</p>
+						<p className="text-[#F4E9D8]/65">Custom tumbler orders are reviewed by MNH Creations before production.</p>
 					</div>
 					<p className="text-[#F4E9D8]/85 italic">
 						imagine. create. love. &mdash;{" "}

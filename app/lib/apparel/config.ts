@@ -80,21 +80,31 @@ export const FABRIC_CAPABILITIES: Record<Fabric, FabricCapabilities> = {
 export type Garment = {
 	id: string;
 	styleId: string;
+	/** Customer-facing name. Never reference a specific brand/trademark here. */
 	label: string;
+	/** Short supporting copy shown under the label in the garment picker. */
+	description: string;
 	fabric: Fabric;
 };
 
+/**
+ * Customer-facing garment names, intentionally generic (no brand/trademark
+ * names like "Dri-Fit"). `fabric`/`styleId` still identify the underlying
+ * stock for pricing and production purposes.
+ */
 export const GARMENTS: readonly Garment[] = [
 	{
 		id: "tee_gildan_bella_canvas",
 		styleId: "short_sleeve_tee",
-		label: "Short-Sleeve Tee — Gildan / Bella+Canvas",
+		label: "T-Shirt",
+		description: "Soft, everyday cotton-blend short-sleeve tee.",
 		fabric: FABRIC.GILDAN_BELLA_CANVAS,
 	},
 	{
 		id: "tee_dri_fit",
 		styleId: "short_sleeve_tee",
-		label: "Short-Sleeve Tee — Dri-Fit Performance",
+		label: "Performance Shirt",
+		description: "Lightweight, moisture-wicking performance fabric.",
 		fabric: FABRIC.DRI_FIT,
 	},
 ];
@@ -174,6 +184,11 @@ export function getBasePriceCents(sizeId: string | null | undefined, fabric: Fab
 	const row = BASE_PRICE_TABLE_CENTS[size.priceRow];
 	if (!row || !(fabric in row)) return null;
 	return row[fabric];
+}
+
+/** Lowest base garment price across the whole table, for "Starting at $X" homepage copy. */
+export function getMinBasePriceCents(): number {
+	return Math.min(...Object.values(BASE_PRICE_TABLE_CENTS).flatMap((row) => Object.values(row)));
 }
 
 export type PrintableAreaIn = { width: number; height: number };
@@ -279,7 +294,10 @@ export type MaxDesignDimensions = {
 
 /**
  * Effective max design dimensions = MIN(equipment max, garment/size
- * printable area) on each axis independently, per spec section 6.
+ * printable area) on each axis independently, per spec section 6. Requires
+ * a specific production method, so it's used internally (e.g. by MNH's own
+ * production workflow) rather than by the customer-facing configurator,
+ * which no longer collects a method — see getMaxDesignDimensionsForFabric.
  */
 export function getMaxDesignDimensionsIn(
 	sizeId: string | null | undefined,
@@ -296,6 +314,46 @@ export function getMaxDesignDimensionsIn(
 			methodConfig.maxPrintWidthIn <= garmentArea.width && methodConfig.maxPrintHeightIn <= garmentArea.height,
 	};
 }
+
+/**
+ * Method-independent max design dimensions for the customer-facing
+ * configurator: MNH chooses the production method (see
+ * PRODUCTION_METHOD_DISCLOSURE), so the placement/preview bounds shown to
+ * the customer must be safe for every method the fabric supports — the
+ * minimum equipment size across those methods, bounded by the garment's
+ * printable area.
+ */
+export function getMaxDesignDimensionsForFabric(
+	sizeId: string | null | undefined,
+	fabric: Fabric | null | undefined,
+): MaxDesignDimensions | null {
+	const size = getSize(sizeId);
+	if (!size || !fabric) return null;
+	const caps = FABRIC_CAPABILITIES[fabric];
+	const methods: ProductionMethod[] = [];
+	if (caps?.supportsHTV) methods.push(PRODUCTION_METHOD.HTV);
+	if (caps?.supportsSublimation) methods.push(PRODUCTION_METHOD.SUBLIMATION);
+	if (methods.length === 0) return null;
+
+	const garmentArea = PRINTABLE_AREA_IN[size.category];
+	const equipmentMaxWidthIn = Math.min(...methods.map((m) => PRODUCTION_METHOD_CONFIG[m].maxPrintWidthIn));
+	const equipmentMaxHeightIn = Math.min(...methods.map((m) => PRODUCTION_METHOD_CONFIG[m].maxPrintHeightIn));
+
+	return {
+		width: Math.min(equipmentMaxWidthIn, garmentArea.width),
+		height: Math.min(equipmentMaxHeightIn, garmentArea.height),
+		limitedByEquipment: equipmentMaxWidthIn <= garmentArea.width && equipmentMaxHeightIn <= garmentArea.height,
+	};
+}
+
+/**
+ * Customer-facing disclosure: MNH — not the customer — decides HTV vs.
+ * sublimation based on the product, artwork, material, color, and design.
+ * PRODUCTION_METHOD/PRODUCTION_METHOD_CONFIG above remain as internal data
+ * for MNH's own production workflow.
+ */
+export const PRODUCTION_METHOD_DISCLOSURE =
+	"Production method is selected by MNH Creations based on your product, artwork, material, color, and design to achieve the best result.";
 
 // ---------------------------------------------------------------------------
 // Add-on pricing (youth/toddler/infant vs. adult tiers)
@@ -482,15 +540,14 @@ export const RUSH_ORDER_CONFIG = {
 
 export const TAX_CONFIG = {
 	enabled: true,
-	// No jurisdiction-specific rate has been supplied yet. Keeping this at 0
-	// avoids silently charging an invented rate; set a real percent (e.g. 7.25
-	// for 7.25%) once MNH confirms the taxing jurisdiction, or replace this
-	// whole module with a real tax service integration.
-	defaultRatePercent: 0,
-	label: "Estimated Sales Tax",
+	// MNH Creations' current jurisdiction rate. Not authoritative — Stripe Tax
+	// (or another real tax service) will replace/validate this in a later
+	// phase. Change this single value to update the rate everywhere it's used.
+	defaultRatePercent: 8.25,
+	label: "Estimated Tax",
 	authoritative: false,
 	disclaimer:
-		"Sales tax shown is an estimate for reference only and is not authoritative. " +
+		"Tax shown is an estimate for reference only and is not authoritative. " +
 		"MNH Creations will confirm final tax due before charging your order.",
 };
 

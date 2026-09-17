@@ -1,109 +1,75 @@
 import { useEffect, useState } from "react";
-import { CartWidget } from "~/components/cart/CartWidget";
-import { useCart } from "~/lib/cart/CartContext";
+import { SiteHeader } from "~/components/layout/SiteHeader";
+import { getMinBasePriceCents } from "~/lib/apparel/config";
+import { formatCents } from "~/lib/apparel/pricing";
+import { getMinTumblerPriceCents } from "~/lib/tumbler/config";
 
 const CONTACT_EMAIL = "info@mnhcreations.com";
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024; // 8MB, matches the server-side limit
 
-type ProductOption = {
-	label: string;
-	price: number;
-};
-
-type Product = {
+/**
+ * Homepage category entry points. Each links straight into that category's
+ * configurator, where the specific product/size/finish is chosen. Add a
+ * future category (decals, mugs, signs, bags, ...) by adding an entry here
+ * once it actually exists — never a placeholder for something not yet
+ * available to order.
+ */
+type ProductCategory = {
 	id: string;
-	name: string;
+	label: string;
 	description: string;
-	options: ProductOption[];
+	href: string;
+	startingAtCents: number;
 	icon: React.ReactNode;
 };
 
-const products: Product[] = [
+const PRODUCT_CATEGORIES: ProductCategory[] = [
 	{
-		id: "16oz-snow-globe",
-		name: "16oz — Snow Globe",
-		description: "Plastic tumbler with a sealed snow-globe-style design.",
-		options: [{ label: "Snow globe style", price: 20 }],
+		id: "tshirts",
+		label: "Custom T-Shirts",
+		description: "Choose a T-Shirt or Performance Shirt, pick your size and color, and add your design.",
+		href: "/shirt-configurator",
+		startingAtCents: getMinBasePriceCents(),
 		icon: (
-			<svg viewBox="0 0 64 96" width="56" height="84" aria-hidden="true">
+			<svg viewBox="0 0 64 64" width="52" height="52" aria-hidden="true">
+				<path
+					d="M20 6 L10 16 L16 24 L20 21 L20 58 L44 58 L44 21 L48 24 L54 16 L44 6 L38 6 C38 9 35 12 32 12 C29 12 26 9 26 6 Z"
+					fill="#C9713D"
+					stroke="#A85B2E"
+					strokeWidth="2"
+				/>
+			</svg>
+		),
+	},
+	{
+		id: "tumblers",
+		label: "Custom Tumblers",
+		description: "Pick a tumbler size and finish, upload your design, and preview the wrap before you order.",
+		href: "/tumbler-configurator",
+		startingAtCents: getMinTumblerPriceCents(),
+		icon: (
+			<svg viewBox="0 0 64 96" width="48" height="72" aria-hidden="true">
 				<rect x="10" y="14" width="44" height="74" rx="10" fill="#F4E3C7" stroke="#B9743B" strokeWidth="3" />
 				<rect x="18" y="4" width="28" height="14" rx="4" fill="#B9743B" />
-				<circle cx="32" cy="46" r="14" fill="#DCEFF2" stroke="#7FB3BF" strokeWidth="2" />
-				<circle cx="26" cy="42" r="1.6" fill="#ffffff" />
-				<circle cx="36" cy="50" r="1.4" fill="#ffffff" />
-				<circle cx="31" cy="52" r="1.2" fill="#ffffff" />
-				<circle cx="38" cy="40" r="1.1" fill="#ffffff" />
-			</svg>
-		),
-	},
-	{
-		id: "20oz-glow-sublimation",
-		name: "20oz — Glow / Sublimation",
-		description: "Choose glow-in-the-dark or a white base ready for full-wrap sublimation art.",
-		options: [
-			{ label: "Glow in the dark", price: 30 },
-			{ label: "Base white / sublimation", price: 25 },
-		],
-		icon: (
-			<svg viewBox="0 0 64 96" width="56" height="84" aria-hidden="true">
-				<rect x="8" y="12" width="48" height="78" rx="10" fill="#2B2138" stroke="#6C4A9B" strokeWidth="3" />
-				<rect x="16" y="2" width="32" height="14" rx="4" fill="#6C4A9B" />
-				<circle cx="22" cy="38" r="2" fill="#B98CE8" />
-				<circle cx="40" cy="30" r="1.5" fill="#7FE8D0" />
-				<circle cx="34" cy="55" r="1.7" fill="#F2E28B" />
-				<circle cx="46" cy="62" r="1.3" fill="#B98CE8" />
-				<circle cx="26" cy="70" r="1.4" fill="#7FE8D0" />
-			</svg>
-		),
-	},
-	{
-		id: "25oz-glitter",
-		name: "25oz — Glitter",
-		description: "Full glitter tumbler for maximum sparkle.",
-		options: [{ label: "Glitter style", price: 35 }],
-		icon: (
-			<svg viewBox="0 0 64 96" width="56" height="84" aria-hidden="true">
-				<rect x="6" y="10" width="52" height="80" rx="10" fill="#F7E9EF" stroke="#C9528C" strokeWidth="3" />
-				<rect x="14" y="0" width="36" height="14" rx="4" fill="#C9528C" />
-				<circle cx="20" cy="34" r="1.4" fill="#F4C542" />
-				<circle cx="30" cy="44" r="1.1" fill="#C9528C" />
-				<circle cx="42" cy="30" r="1.3" fill="#7FB3BF" />
-				<circle cx="24" cy="56" r="1.2" fill="#F4C542" />
-				<circle cx="38" cy="60" r="1.5" fill="#C9528C" />
-				<circle cx="46" cy="48" r="1.1" fill="#7FB3BF" />
-				<circle cx="30" cy="72" r="1.3" fill="#F4C542" />
 			</svg>
 		),
 	},
 ];
 
-const optionValue = (productName: string, option: ProductOption) =>
-	`${productName} — ${option.label} ($${option.price})`;
-
 const steps = [
-	{
-		title: "Pick a size & style",
-		body: "Choose your tumbler size and finish from the options above.",
-	},
-	{
-		title: "Tell us your idea",
-		body: "Send us your colors, names, or design ideas using the contact form.",
-	},
-	{
-		title: "We create & ship",
-		body: "We'll confirm your total (including shipping) and get your tumbler made and sent out.",
-	},
+	{ title: "Choose Your Product", body: "Pick a category above — T-Shirts, Tumblers, and more to come." },
+	{ title: "Customize It", body: "Choose your size, color, and finish, then add your design or ask MNH to create one." },
+	{ title: "Review Your Design", body: "Preview your design placement and confirm the details before it's added to your cart." },
+	{ title: "MNH Creates It", body: "MNH Creations reviews your order and brings your design to life." },
+	{ title: "Pickup or Delivery", body: "Choose local pickup or shipping — your total updates to match." },
 ];
 
 export default function Home() {
-	const cart = useCart();
-	const [selectedOption, setSelectedOption] = useState("");
 	const [formNote, setFormNote] = useState("");
 	const [imageFile, setImageFile] = useState<File | null>(null);
 	const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
 	const [imageError, setImageError] = useState("");
 	const [isSubmitting, setIsSubmitting] = useState(false);
-	const [addedOption, setAddedOption] = useState<string | null>(null);
 
 	useEffect(() => {
 		if (!imageFile) {
@@ -114,26 +80,6 @@ export default function Home() {
 		setImagePreviewUrl(objectUrl);
 		return () => URL.revokeObjectURL(objectUrl);
 	}, [imageFile]);
-
-	const handleInquire = (value: string) => {
-		setSelectedOption(value);
-		document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" });
-		document.getElementById("name")?.focus({ preventScroll: true });
-	};
-
-	const handleAddToCart = (product: Product, option: ProductOption) => {
-		cart.addItem({
-			kind: "simple_product",
-			productId: `${product.id}__${option.label}`.toLowerCase().replace(/[^a-z0-9]+/g, "_"),
-			name: `${product.name} — ${option.label}`,
-			quantity: 1,
-			unitPriceCents: option.price * 100,
-			config: { description: `${product.name} — ${option.label}` },
-		});
-		const key = optionValue(product.name, option);
-		setAddedOption(key);
-		setTimeout(() => setAddedOption((current) => (current === key ? null : current)), 1200);
-	};
 
 	const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		const file = event.target.files?.[0] ?? null;
@@ -186,12 +132,10 @@ export default function Home() {
 		}
 
 		const formData = new FormData(form);
-		const subject = `Tumbler Order Inquiry — ${formData.get("product")}`;
+		const subject = "MNH Creations — Custom Request";
 		const body = [
 			`Name: ${formData.get("name")}`,
 			`Email: ${formData.get("email")}`,
-			`Tumbler: ${formData.get("product")}`,
-			`Quantity: ${formData.get("quantity")}`,
 			"",
 			"Details:",
 			(formData.get("message") as string) || "(none provided)",
@@ -231,21 +175,7 @@ export default function Home() {
 				/>
 			</div>
 
-			<header className="sticky top-0 z-20 border-b border-[#4A3728]/10 bg-[#FFF7EC]/90 backdrop-blur">
-				<div className="mx-auto flex max-w-[1100px] flex-wrap items-center justify-between gap-y-2 px-6 py-3">
-					<a href="#top" className="flex items-center gap-2.5">
-						<img src="/logo.PNG" alt="MNH Creations logo" width={44} height={44} className="h-11 w-11 object-contain" />
-						<span className="font-[family-name:var(--font-head)] text-lg font-semibold">MNH Creations</span>
-					</a>
-					<nav aria-label="Primary" className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm font-bold text-[#7A5C46] sm:gap-x-6">
-						<a href="#products" className="hover:text-[#A85B2E]">Tumblers</a>
-						<a href="/shirt-configurator" className="hover:text-[#A85B2E]">Custom Shirts</a>
-						<a href="#how-it-works" className="hover:text-[#A85B2E]">How It Works</a>
-						<a href="#contact" className="hover:text-[#A85B2E]">Contact</a>
-						<CartWidget />
-					</nav>
-				</div>
-			</header>
+			<SiteHeader />
 
 			<main id="top">
 				<section className="relative overflow-hidden py-20">
@@ -262,18 +192,18 @@ export default function Home() {
 								Custom Creations &bull; Personalized Gifts &bull; Handmade Designs
 							</p>
 							<h1 className="font-[family-name:var(--font-head)] text-[clamp(2.1rem,4vw,3rem)] leading-[1.15] font-semibold text-[#4A3728]">
-								Custom Tumblers, Made With Love
+								Custom Creations, Made With Love
 							</h1>
 							<p className="mt-3 max-w-[520px] text-[1.05rem] text-[#7A5C46]">
-								One-of-a-kind tumblers, personalized just for you. Pick a style below and
-								send us your idea — we&apos;ll bring it to life.
+								One-of-a-kind shirts and tumblers, personalized just for you. Pick a category below and
+								build your design — we&apos;ll bring it to life.
 							</p>
 							<div className="mt-6 flex flex-wrap gap-3.5">
 								<a
 									href="#products"
 									className="rounded-full bg-[#C9713D] px-6 py-3 text-sm font-extrabold text-white transition hover:-translate-y-px hover:bg-[#A85B2E]"
 								>
-									See Our Tumblers
+									Shop Categories
 								</a>
 								<a
 									href={`mailto:${CONTACT_EMAIL}`}
@@ -286,98 +216,46 @@ export default function Home() {
 					</div>
 				</section>
 
-				<section id="products" className="py-16">
+				<section id="products" className="scroll-mt-20 py-16">
 					<div className="mx-auto max-w-[1100px] px-6">
 						<h2 className="text-center font-[family-name:var(--font-head)] text-[clamp(1.7rem,3vw,2.2rem)] font-semibold">
-							Custom Tumblers
+							Shop by Category
 						</h2>
 						<p className="mx-auto mt-2 mb-10 max-w-[560px] text-center text-[#7A5C46]">
-							Every tumbler is made to order. Shipping is calculated separately and added to your total.
+							Every item is made to order and reviewed by MNH Creations before production.
 						</p>
 
-						<div className="grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-7">
-							<article className="flex flex-col items-start rounded-[20px] border-2 border-[#C9713D] bg-white p-6 pt-7 shadow-[0_10px_30px_rgba(74,55,40,0.10)]">
-								<div className="mb-3 self-center" aria-hidden="true">
-									<svg viewBox="0 0 64 64" width="56" height="56">
-										<path
-											d="M20 6 L10 16 L16 24 L20 21 L20 58 L44 58 L44 21 L48 24 L54 16 L44 6 L38 6 C38 9 35 12 32 12 C29 12 26 9 26 6 Z"
-											fill="#C9713D"
-											stroke="#A85B2E"
-											strokeWidth="2"
-										/>
-									</svg>
-								</div>
-								<h3 className="self-center font-[family-name:var(--font-head)] text-[1.2rem] font-semibold">
-									Custom HTV / Sublimation Shirt
-								</h3>
-								<p className="min-h-[42px] text-[0.92rem] text-[#7A5C46]">
-									Build your own shirt: garment, size, color, print method, and design &mdash; priced live as you go.
-								</p>
-								<ul className="mt-2 mb-1 w-full list-none border-t border-[#F4E9D8] p-0">
-									<li className="flex items-baseline justify-between border-b border-[#F4E9D8] py-2.5 font-bold">
-										<span>Starting at</span>
-										<span className="font-[family-name:var(--font-head)] text-[1.05rem] text-[#A85B2E]">$16</span>
-									</li>
-								</ul>
-								<p className="mb-4.5 text-[0.8rem] text-[#7A5C46] italic">Subject to MNH Creations review &amp; approval</p>
+						<div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-7">
+							{PRODUCT_CATEGORIES.map((category) => (
 								<a
-									href="/shirt-configurator"
-									className="w-full rounded-full bg-[#C9713D] px-6 py-3 text-center text-sm font-extrabold text-white transition hover:bg-[#A85B2E]"
+									key={category.id}
+									href={category.href}
+									className="flex flex-col items-start rounded-[20px] border-2 border-[#C9713D] bg-white p-7 shadow-[0_10px_30px_rgba(74,55,40,0.10)] transition hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(74,55,40,0.16)]"
 								>
-									Start Customizing
+									<div className="mb-3.5 self-center">{category.icon}</div>
+									<h3 className="self-center font-[family-name:var(--font-head)] text-[1.35rem] font-semibold">{category.label}</h3>
+									<p className="mt-1.5 min-h-[42px] text-[0.95rem] text-[#7A5C46]">{category.description}</p>
+									<p className="mt-3 font-bold">
+										Starting at <span className="font-[family-name:var(--font-head)] text-[1.1rem] text-[#A85B2E]">{formatCents(category.startingAtCents)}</span>
+									</p>
+									<span className="mt-4 w-full rounded-full bg-[#C9713D] px-6 py-3 text-center text-sm font-extrabold text-white">
+										Start Customizing
+									</span>
 								</a>
-							</article>
-							{products.map((product) => (
-								<article
-									key={product.id}
-									className="flex flex-col items-start rounded-[20px] bg-white p-6 pt-7 shadow-[0_10px_30px_rgba(74,55,40,0.10)]"
-								>
-									<div className="mb-3 self-center">{product.icon}</div>
-									<h3 className="self-center font-[family-name:var(--font-head)] text-[1.2rem] font-semibold">
-										{product.name}
-									</h3>
-									<p className="min-h-[42px] text-[0.92rem] text-[#7A5C46]">{product.description}</p>
-									<ul className="mt-2 mb-1 w-full list-none border-t border-[#F4E9D8] p-0">
-										{product.options.map((option) => (
-											<li
-												key={option.label}
-												className="flex flex-wrap items-baseline justify-between gap-y-2 border-b border-[#F4E9D8] py-2.5 font-bold"
-											>
-												<span>{option.label}</span>
-												<span className="font-[family-name:var(--font-head)] text-[1.05rem] text-[#A85B2E]">
-													${option.price}
-												</span>
-												<button
-													type="button"
-													onClick={() => handleAddToCart(product, option)}
-													className="w-full rounded-full border-2 border-[#C9713D] px-3.5 py-1.5 text-center text-xs font-extrabold text-[#A85B2E] transition hover:bg-[#C9713D] hover:text-white"
-												>
-													{addedOption === optionValue(product.name, option) ? "Added!" : "Add to Cart"}
-												</button>
-											</li>
-										))}
-									</ul>
-									<p className="mb-4.5 text-[0.8rem] text-[#7A5C46] italic">+ shipping &amp; handling</p>
-									<button
-										type="button"
-										onClick={() =>
-											handleInquire(
-												product.options.length === 1
-													? optionValue(product.name, product.options[0])
-													: "",
-											)
-										}
-										className="w-full rounded-full border-2 border-[#C9713D] px-6 py-3 text-center text-sm font-extrabold text-[#A85B2E] transition hover:bg-[#C9713D] hover:text-white"
-									>
-										Inquire to Order
-									</button>
-								</article>
 							))}
 						</div>
+
+						<p className="mt-10 text-center text-[#7A5C46]">
+							Need something different?{" "}
+							<a href={`mailto:${CONTACT_EMAIL}`} className="font-extrabold text-[#A85B2E] underline">
+								Contact MNH Creations
+							</a>{" "}
+							for unusual requests.
+						</p>
 					</div>
 				</section>
 
-				<section id="how-it-works" className="bg-[#F4E9D8] py-16">
+				<section id="how-it-works" className="scroll-mt-20 bg-[#F4E9D8] py-16">
 					<div className="mx-auto max-w-[1100px] px-6">
 						<h2 className="text-center font-[family-name:var(--font-head)] text-[clamp(1.7rem,3vw,2.2rem)] font-semibold">
 							How It Works
@@ -396,16 +274,16 @@ export default function Home() {
 					</div>
 				</section>
 
-				<section id="contact" className="py-16 pb-24">
+				<section id="contact" className="scroll-mt-20 py-16 pb-24">
 					<div className="mx-auto grid max-w-[1100px] grid-cols-1 gap-12 px-6 md:grid-cols-[1fr_1.3fr]">
 						<div>
 							<h2 className="font-[family-name:var(--font-head)] text-[clamp(1.7rem,3vw,2.2rem)] font-semibold">
-								Ready to Order?
+								Need Something Different?
 							</h2>
 							<p className="text-[#7A5C46]">
-								Fill out the form and let us know which tumbler you&apos;d like and any
-								customization details. We&apos;ll reach out to confirm your order and
-								shipping cost.
+								Most orders go through our T-Shirt and Tumbler configurators above, with pricing and your
+								cart built in. For anything unusual — a different product, a bulk order, or a custom
+								request — tell us about it here and we&apos;ll reach out.
 							</p>
 							<p className="text-[#7A5C46]">
 								Prefer to email directly?{" "}
@@ -444,41 +322,7 @@ export default function Home() {
 							</div>
 
 							<div className="mb-4 flex flex-col gap-1.5">
-								<label htmlFor="product" className="text-sm font-bold">Tumbler</label>
-								<select
-									id="product"
-									name="product"
-									required
-									value={selectedOption}
-									onChange={(event) => setSelectedOption(event.target.value)}
-									className="rounded-[14px] border-[1.5px] border-[#F4E9D8] bg-[#FFF7EC] px-3 py-2.5 text-[0.95rem] focus:outline-2 focus:outline-[#C9713D] focus:outline-offset-1"
-								>
-									<option value="" disabled>Choose a tumbler...</option>
-									{products.flatMap((product) =>
-										product.options.map((option) => (
-											<option key={optionValue(product.name, option)} value={optionValue(product.name, option)}>
-												{product.name} ({option.label}) — ${option.price}
-											</option>
-										)),
-									)}
-								</select>
-							</div>
-
-							<div className="mb-4 flex flex-col gap-1.5">
-								<label htmlFor="quantity" className="text-sm font-bold">Quantity</label>
-								<input
-									type="number"
-									id="quantity"
-									name="quantity"
-									min={1}
-									defaultValue={1}
-									required
-									className="rounded-[14px] border-[1.5px] border-[#F4E9D8] bg-[#FFF7EC] px-3 py-2.5 text-[0.95rem] focus:outline-2 focus:outline-[#C9713D] focus:outline-offset-1"
-								/>
-							</div>
-
-							<div className="mb-4 flex flex-col gap-1.5">
-								<label htmlFor="message" className="text-sm font-bold">Details (colors, names, design ideas)</label>
+								<label htmlFor="message" className="text-sm font-bold">Tell us what you have in mind</label>
 								<textarea
 									id="message"
 									name="message"
@@ -513,7 +357,7 @@ export default function Home() {
 								disabled={isSubmitting}
 								className="rounded-full bg-[#C9713D] px-6 py-3 text-sm font-extrabold text-white transition hover:bg-[#A85B2E] disabled:cursor-not-allowed disabled:opacity-60"
 							>
-								{isSubmitting ? "Sending..." : "Send Order Inquiry"}
+								{isSubmitting ? "Sending..." : "Send Request"}
 							</button>
 							<p role="status" className="mt-3 min-h-[1.2em] text-[0.88rem] text-[#8A9A5B]">
 								{formNote}

@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { cartReducer } from "./CartContext";
 import { createEmptyCartState, getCartItemCount, getCartSubtotalCents, type CartState, type NewCartItemInput } from "./types";
+import { FULFILLMENT_METHOD } from "./shipping";
 
 function addItem(state: CartState, input: NewCartItemInput) {
 	return cartReducer(state, { type: "ADD_ITEM", item: input });
@@ -31,6 +32,14 @@ describe("cartReducer", () => {
 		state = addItem(state, { kind: "custom_shirt", productId: "custom_htv_sublimation_shirt", name: "Custom Shirt", quantity: 1, unitPriceCents: 3500, config: {} });
 		expect(state.items.length).toBe(2);
 		expect(getCartItemCount(state)).toBe(2);
+	});
+
+	test("a single cart holds custom_shirt and custom_tumbler items together with correct combined totals", () => {
+		let state = createEmptyCartState();
+		state = addItem(state, { kind: "custom_shirt", productId: "x", name: "Custom Shirt", quantity: 1, unitPriceCents: 2500, config: {} });
+		state = addItem(state, { kind: "custom_tumbler", productId: "16oz-snow-globe", name: "Custom Tumbler", quantity: 2, unitPriceCents: 2000, config: {} });
+		expect(state.items.length).toBe(2);
+		expect(getCartSubtotalCents(state)).toBe(2500 + 4000);
 	});
 
 	// TEST 18/19 — Quantity changes recalculate totals; subtotal is correct
@@ -86,5 +95,32 @@ describe("cartReducer", () => {
 		let state = createEmptyCartState();
 		state = cartReducer(state, { type: "SET_ORDER_NOTES", notes: "Please rush if possible" });
 		expect(state.orderNotes).toBe("Please rush if possible");
+	});
+
+	test("a new cart defaults to local pickup with no destination ZIP required", () => {
+		const state = createEmptyCartState();
+		expect(state.fulfillmentMethod).toBe(FULFILLMENT_METHOD.PICKUP);
+		expect(state.destinationZip).toBe("");
+	});
+
+	test("SET_FULFILLMENT_METHOD and SET_DESTINATION_ZIP update cart-level shipping choice", () => {
+		let state = createEmptyCartState();
+		state = cartReducer(state, { type: "SET_FULFILLMENT_METHOD", method: FULFILLMENT_METHOD.SHIPPING });
+		state = cartReducer(state, { type: "SET_DESTINATION_ZIP", zip: "77484" });
+		expect(state.fulfillmentMethod).toBe(FULFILLMENT_METHOD.SHIPPING);
+		expect(state.destinationZip).toBe("77484");
+	});
+
+	test("SET_SHIPPING_ADDRESS stores the shipping address", () => {
+		let state = createEmptyCartState();
+		state = cartReducer(state, { type: "SET_SHIPPING_ADDRESS", address: "123 Main St, Katy, TX" });
+		expect(state.shippingAddress).toBe("123 Main St, Katy, TX");
+	});
+
+	test("SET_CUSTOMER_INFO merges a partial patch into existing customer info", () => {
+		let state = createEmptyCartState();
+		state = cartReducer(state, { type: "SET_CUSTOMER_INFO", patch: { name: "Jordan Rivera" } });
+		state = cartReducer(state, { type: "SET_CUSTOMER_INFO", patch: { email: "jordan@example.com" } });
+		expect(state.customer).toEqual({ name: "Jordan Rivera", email: "jordan@example.com", phone: "" });
 	});
 });

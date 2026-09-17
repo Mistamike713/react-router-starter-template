@@ -10,47 +10,59 @@ import { Link } from "react-router";
 import { useCart } from "~/lib/cart/CartContext";
 import { getCartItemCount, getCartSubtotalCents, type CartItem } from "~/lib/cart/types";
 import { computeTax } from "~/lib/cart/tax";
+import { computeShippingEstimate, validateDestinationZip, FULFILLMENT_METHOD } from "~/lib/cart/shipping";
+import { generateOrderReference } from "~/lib/cart/orderReference";
+import { buildOrderSummaryText } from "~/lib/cart/buildOrderSummary";
 import { formatCents } from "~/lib/apparel/pricing";
-import { describeCartItem, customShirtDetailLines } from "~/lib/cart/describeCartItem";
+import { describeCartItem, customShirtDetailLines, customTumblerDetailLines } from "~/lib/cart/describeCartItem";
 
 const CONTACT_EMAIL = "info@mnhcreations.com";
 
-function buildOrderSummaryText(items: CartItem[], orderNotes: string, subtotalCents: number): string {
-	const tax = computeTax(subtotalCents);
-	const lines = ["MNH Creations — Order Request", ""];
-	items.forEach((item, idx) => {
-		lines.push(`${idx + 1}. ${item.name} ×${item.quantity} — ${formatCents(item.extendedPriceCents)}`);
-		const description = describeCartItem(item);
-		if (description) lines.push(`   ${description}`);
-		if (item.kind === "custom_shirt") {
-			customShirtDetailLines(item.config).forEach((l) => lines.push(`   - ${l}`));
-			const instructions = item.config.instructions;
-			if (typeof instructions === "string" && instructions) lines.push(`   Instructions: ${instructions}`);
-			if (item.reviewRequired) lines.push(`   [Subject to MNH review: ${item.reviewReasons.join(", ")}]`);
-		}
-		lines.push("");
-	});
-	lines.push(`Subtotal: ${formatCents(subtotalCents)}`);
-	lines.push(`${tax.label}: ${formatCents(tax.taxCents)}${tax.authoritative ? "" : " (estimate)"}`);
-	lines.push(`Total: ${formatCents(subtotalCents + tax.taxCents)}`);
-	if (orderNotes) lines.push("", "Notes for MNH Creations:", orderNotes);
-	return lines.join("\n");
+function isValidEmail(email: string): boolean {
+	return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 }
 
 export function CartWidget() {
 	const cart = useCart();
 	const [isOpen, setIsOpen] = useState(false);
 	const [mounted, setMounted] = useState(false);
+	const [zipTouched, setZipTouched] = useState(false);
+	const [contactTouched, setContactTouched] = useState(false);
 	useEffect(() => setMounted(true), []);
 	const items = cart.state.items;
 	const itemCount = getCartItemCount(cart.state);
 	const subtotalCents = getCartSubtotalCents(cart.state);
 	const tax = computeTax(subtotalCents);
+	const shipping = computeShippingEstimate(cart.state.fulfillmentMethod, cart.state.destinationZip);
+	const zipValidation = validateDestinationZip(cart.state.fulfillmentMethod, cart.state.destinationZip);
+	const estimatedTotalCents = subtotalCents + tax.taxCents + shipping.shippingCents;
+	const nameValid = cart.state.customer.name.trim().length > 0;
+	const emailValid = isValidEmail(cart.state.customer.email);
+	const contactValid = nameValid && emailValid;
+	const canSubmit = items.length > 0 && zipValidation.valid && contactValid;
 
 	const handleSubmitOrder = () => {
 		if (items.length === 0) return;
+		if (!contactValid) {
+			setContactTouched(true);
+			setZipTouched(true);
+			return;
+		}
+		if (!zipValidation.valid) {
+			setZipTouched(true);
+			return;
+		}
 		const subject = "MNH Creations — Order Request";
-		const body = buildOrderSummaryText(items, cart.state.orderNotes, subtotalCents);
+		const body = buildOrderSummaryText({
+			orderReference: generateOrderReference(),
+			customer: cart.state.customer,
+			items,
+			orderNotes: cart.state.orderNotes,
+			subtotalCents,
+			fulfillmentMethod: cart.state.fulfillmentMethod,
+			destinationZip: cart.state.destinationZip,
+			shippingAddress: cart.state.shippingAddress,
+		});
 		window.location.href = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 	};
 
@@ -93,18 +105,113 @@ export function CartWidget() {
 								</button>
 							</div>
 
-							{items.length === 0 ? (
-								<p className="px-5 py-6 text-[#7A5C46]">Your cart is empty.</p>
-							) : (
-								<div className="min-h-0 flex-1 overflow-y-auto px-5">
-									{items.map((item) => (
-										<CartItemRow key={item.id} item={item} />
-									))}
-								</div>
-							)}
+							{/*
+								Everything except the totals/submit strip below scrolls
+								together (items, contact info, fulfillment, notes) so a
+								growing form never squeezes the item list to nothing —
+								only the compact summary + CTA stay pinned at the bottom.
+							*/}
+							<div className="min-h-0 flex-1 overflow-y-auto px-5">
+								{items.length === 0 ? (
+									<p className="py-6 text-[#7A5C46]">Your cart is empty.</p>
+								) : (
+									items.map((item) => <CartItemRow key={item.id} item={item} />)
+								)}
 
-							<div className="border-t border-[#F4E9D8] bg-white px-5 pt-4 pb-5">
-								<div className="mb-3.5 flex flex-col gap-1.5">
+								<fieldset className="mt-2 mb-3.5 flex flex-col gap-1.5 border-t border-[#F4E9D8] pt-4">
+									<legend className="mb-0.5 text-sm font-bold">Your Contact Info</legend>
+									<input
+										type="text"
+										value={cart.state.customer.name}
+										onChange={(e) => cart.setCustomerInfo({ name: e.target.value })}
+										onBlur={() => setContactTouched(true)}
+										placeholder="Full name"
+										aria-label="Full name"
+										className="rounded-[14px] border-[1.5px] border-[#F4E9D8] bg-[#FFF7EC] px-3 py-2 text-sm"
+									/>
+									<input
+										type="email"
+										value={cart.state.customer.email}
+										onChange={(e) => cart.setCustomerInfo({ email: e.target.value })}
+										onBlur={() => setContactTouched(true)}
+										placeholder="Email address"
+										aria-label="Email address"
+										className="rounded-[14px] border-[1.5px] border-[#F4E9D8] bg-[#FFF7EC] px-3 py-2 text-sm"
+									/>
+									<input
+										type="tel"
+										value={cart.state.customer.phone}
+										onChange={(e) => cart.setCustomerInfo({ phone: e.target.value })}
+										placeholder="Phone (optional)"
+										aria-label="Phone number (optional)"
+										className="rounded-[14px] border-[1.5px] border-[#F4E9D8] bg-[#FFF7EC] px-3 py-2 text-sm"
+									/>
+									{contactTouched && !contactValid && (
+										<p role="alert" className="text-sm text-[#a33]">
+											Please enter your name and a valid email address.
+										</p>
+									)}
+								</fieldset>
+
+								<fieldset className="mb-3.5">
+									<legend className="mb-1.5 text-sm font-bold">How will you get your order?</legend>
+									<div className="flex gap-4 text-sm">
+										<label className="inline-flex items-center gap-1.5">
+											<input
+												type="radio"
+												name="fulfillment-method"
+												checked={cart.state.fulfillmentMethod === FULFILLMENT_METHOD.PICKUP}
+												onChange={() => cart.setFulfillmentMethod(FULFILLMENT_METHOD.PICKUP)}
+											/>
+											Local Pickup
+										</label>
+										<label className="inline-flex items-center gap-1.5">
+											<input
+												type="radio"
+												name="fulfillment-method"
+												checked={cart.state.fulfillmentMethod === FULFILLMENT_METHOD.SHIPPING}
+												onChange={() => cart.setFulfillmentMethod(FULFILLMENT_METHOD.SHIPPING)}
+											/>
+											Ship to Me
+										</label>
+									</div>
+								</fieldset>
+
+								{cart.state.fulfillmentMethod === FULFILLMENT_METHOD.SHIPPING && (
+									<div className="mb-3.5 flex flex-col gap-1.5">
+										<label htmlFor="cart-destination-zip" className="text-sm font-bold">
+											Destination ZIP Code
+										</label>
+										<input
+											id="cart-destination-zip"
+											type="text"
+											inputMode="numeric"
+											value={cart.state.destinationZip}
+											onChange={(e) => cart.setDestinationZip(e.target.value)}
+											onBlur={() => setZipTouched(true)}
+											placeholder="e.g. 77484"
+											className="rounded-[14px] border-[1.5px] border-[#F4E9D8] bg-[#FFF7EC] px-3 py-2 text-sm"
+										/>
+										{zipTouched && !zipValidation.valid && (
+											<p role="alert" className="text-sm text-[#a33]">
+												{zipValidation.error}
+											</p>
+										)}
+										<label htmlFor="cart-shipping-address" className="mt-1.5 text-sm font-bold">
+											Shipping Address
+										</label>
+										<textarea
+											id="cart-shipping-address"
+											rows={2}
+											value={cart.state.shippingAddress}
+											onChange={(e) => cart.setShippingAddress(e.target.value)}
+											placeholder="Street, city, state"
+											className="rounded-[14px] border-[1.5px] border-[#F4E9D8] bg-[#FFF7EC] px-3 py-2 text-sm"
+										/>
+									</div>
+								)}
+
+								<div className="mb-1.5 flex flex-col gap-1.5">
 									<label htmlFor="cart-order-notes" className="text-sm font-bold">
 										Notes for MNH Creations
 									</label>
@@ -117,7 +224,9 @@ export function CartWidget() {
 										className="rounded-[14px] border-[1.5px] border-[#F4E9D8] bg-[#FFF7EC] px-3 py-2 text-sm"
 									/>
 								</div>
+							</div>
 
+							<div className="border-t border-[#F4E9D8] bg-white px-5 pt-4 pb-5">
 								<div className="flex justify-between py-1 text-sm">
 									<span>Subtotal</span>
 									<span>{formatCents(subtotalCents)}</span>
@@ -126,20 +235,25 @@ export function CartWidget() {
 									<span>{tax.label}{tax.authoritative ? "" : " (est.)"}</span>
 									<span>{formatCents(tax.taxCents)}</span>
 								</div>
+								<div className="flex justify-between py-1 text-sm">
+									<span>{shipping.label}{shipping.authoritative ? "" : " (est.)"}</span>
+									<span>{formatCents(shipping.shippingCents)}</span>
+								</div>
 								<div className="mt-1 flex justify-between border-t border-[#F4E9D8] pt-2 text-base font-extrabold">
-									<span>Total</span>
-									<span>{formatCents(subtotalCents + tax.taxCents)}</span>
+									<span>Estimated Total</span>
+									<span>{formatCents(estimatedTotalCents)}</span>
 								</div>
 
 								<button
 									type="button"
-									disabled={items.length === 0}
+									disabled={!canSubmit}
 									onClick={handleSubmitOrder}
 									className="mt-3 w-full rounded-full bg-[#C9713D] px-6 py-3 text-sm font-extrabold text-white transition hover:bg-[#A85B2E] disabled:cursor-not-allowed disabled:opacity-50"
 								>
 									Submit Order Request
 								</button>
 								<p className="mt-2 text-[0.72rem] text-[#7A5C46]">{tax.disclaimer}</p>
+								<p className="text-[0.72rem] text-[#7A5C46]">{shipping.disclaimer}</p>
 							</div>
 						</aside>
 					</>,
@@ -152,7 +266,12 @@ export function CartWidget() {
 function CartItemRow({ item }: { item: CartItem }) {
 	const cart = useCart();
 	const description = describeCartItem(item);
-	const details = item.kind === "custom_shirt" ? customShirtDetailLines(item.config) : [];
+	const details =
+		item.kind === "custom_shirt"
+			? customShirtDetailLines(item.config)
+			: item.kind === "custom_tumbler"
+				? customTumblerDetailLines(item.config)
+				: [];
 
 	return (
 		<div className="border-b border-[#F4E9D8] py-4">
@@ -200,6 +319,11 @@ function CartItemRow({ item }: { item: CartItem }) {
 			<div className="mt-2 flex gap-3.5 text-[0.85rem] font-bold">
 				{item.kind === "custom_shirt" && (
 					<Link to={`/shirt-configurator?editId=${encodeURIComponent(item.id)}`} className="text-[#A85B2E] underline">
+						Edit
+					</Link>
+				)}
+				{item.kind === "custom_tumbler" && (
+					<Link to={`/tumbler-configurator?editId=${encodeURIComponent(item.id)}`} className="text-[#A85B2E] underline">
 						Edit
 					</Link>
 				)}

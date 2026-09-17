@@ -3,16 +3,16 @@ import { ContinueButton, FieldError, Hint } from "../StepShell";
 import type { StepProps } from "../stepTypes";
 
 export function ColorStep({ state, patch, errors, onContinue }: StepProps) {
-	if (!state.garmentId || !state.method) {
+	if (!state.garmentId) {
 		return (
 			<>
-				<Hint>Choose a garment and production method first.</Hint>
+				<Hint>Choose a garment first.</Hint>
 				<ContinueButton onClick={onContinue} />
 			</>
 		);
 	}
 
-	const eligible = getEligibleColors(state.garmentId, state.method);
+	const eligible = getEligibleColors(state.garmentId);
 
 	return (
 		<>

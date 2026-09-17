@@ -1,6 +1,13 @@
 import { describe, expect, test } from "vitest";
-import { garmentSupportsMethod, getEligibleColors, getMaxDesignDimensions, getReviewReasons, validateArtworkFile } from "./compatibility";
-import { PRODUCTION_METHOD, REVIEW_REASON } from "./config";
+import {
+	garmentSupportsMethod,
+	getEligibleColors,
+	getMaxDesignDimensions,
+	getMaxDesignDimensionsForGarment,
+	getReviewReasons,
+	validateArtworkFile,
+} from "./compatibility";
+import { GARMENTS, PRODUCTION_METHOD, PRODUCTION_METHOD_DISCLOSURE, REVIEW_REASON } from "./config";
 import { createDefaultShirtConfiguratorState } from "./types";
 
 describe("getMaxDesignDimensions", () => {
@@ -79,6 +86,40 @@ describe("getReviewReasons", () => {
 		});
 		expect(withSpecialty).toContain(REVIEW_REASON.SPECIALTY_MATERIAL_REVIEW);
 		expect(withoutSpecialty).not.toContain(REVIEW_REASON.SPECIALTY_MATERIAL_REVIEW);
+	});
+});
+
+describe("customer-facing garment simplification", () => {
+	test("garment labels are generic, customer-facing names with no brand/trademark terms", () => {
+		const labels = GARMENTS.map((g) => g.label);
+		expect(labels).toContain("T-Shirt");
+		expect(labels).toContain("Performance Shirt");
+		expect(labels.join(" ")).not.toMatch(/dri-fit/i);
+	});
+
+	test("the Performance Shirt carries the required supporting copy", () => {
+		const performance = GARMENTS.find((g) => g.id === "tee_dri_fit");
+		expect(performance?.description).toBe("Lightweight, moisture-wicking performance fabric.");
+	});
+
+	test("a production-method disclosure explaining MNH decides the method is available", () => {
+		expect(PRODUCTION_METHOD_DISCLOSURE.length).toBeGreaterThan(0);
+		expect(PRODUCTION_METHOD_DISCLOSURE).toMatch(/MNH Creations/);
+	});
+
+	test("getEligibleColors without a method returns every color the fabric is stocked in", () => {
+		const colors = getEligibleColors("tee_dri_fit");
+		expect(colors.some((c) => c.id === "black")).toBe(true);
+		expect(colors.some((c) => c.id === "white")).toBe(true);
+		expect(colors.length).toBeGreaterThan(1);
+	});
+
+	test("getMaxDesignDimensionsForGarment is method-independent and never exceeds any supported method's equipment max", () => {
+		// tee_dri_fit supports both HTV (24x24) and sublimation (11x17); the
+		// customer-facing bound must be safe for whichever MNH picks.
+		const dims = getMaxDesignDimensionsForGarment("adult_l", "tee_dri_fit");
+		expect(dims?.width).toBe(11);
+		expect(dims?.height).toBe(16);
 	});
 });
 

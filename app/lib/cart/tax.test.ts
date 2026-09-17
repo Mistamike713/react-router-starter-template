@@ -10,9 +10,13 @@ describe("computeTax", () => {
 		expect(result.disclaimer.length).toBeGreaterThan(0);
 	});
 
-	test("with the default (unconfigured) rate never fabricates a nonzero tax", () => {
+	// TEST — the centralized MNH Creations rate (8.25%) applies by default
+	test("the default rate is 8.25% and is applied when no override is given", () => {
 		const result = computeTax(10000);
-		expect(result.taxCents).toBe(0);
+		expect(result.taxCents).toBe(825);
+		expect(result.ratePercent).toBe(8.25);
+		expect(result.label).toBe("Estimated Tax");
+		expect(result.authoritative).toBe(false);
 	});
 
 	test("rounds to the nearest cent", () => {
