@@ -84,6 +84,16 @@ export async function action({ request, context }: Route.ActionArgs) {
     }
   }
 
+  if (orderId && event.type === "checkout.session.async_payment_failed") {
+    await db.batch([
+      db.prepare("UPDATE orders SET status='failed', updated_at=? WHERE id=? AND status='checkout_created'")
+        .bind(now, orderId),
+      db.prepare("INSERT INTO stripe_events (event_id, event_type, order_id, processed_at) VALUES (?, ?, ?, ?)")
+        .bind(event.id, event.type, orderId, now),
+    ]);
+    return Response.json({ received: true });
+  }
+
   if (orderId && event.type === "checkout.session.expired") {
     await db.batch([
       db.prepare("UPDATE orders SET status='cancelled', updated_at=? WHERE id=? AND status='checkout_created'")
