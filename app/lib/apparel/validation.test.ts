@@ -42,10 +42,15 @@ describe("validateFullConfiguration", () => {
 });
 
 describe("validateColorStep", () => {
-	test("an ineligible color for the garment/method is rejected", () => {
-		// Black is not a light color, so it is invalid once sublimation is selected on a fabric that supports it.
-		const result = validateColorStep({ ...createDefaultShirtConfiguratorState(), garmentId: "tee_dri_fit", method: "sublimation", colorId: "black" });
+	test("a color the garment's fabric isn't stocked in is rejected", () => {
+		// Forest Green is only stocked on the cotton-blend fabric, not the performance-shirt fabric.
+		const result = validateColorStep({ ...createDefaultShirtConfiguratorState(), garmentId: "tee_dri_fit", colorId: "forest_green" });
 		expect(result.valid).toBe(false);
+	});
+
+	test("every fabric-stocked color is accepted without a customer-selected production method", () => {
+		const result = validateColorStep({ ...createDefaultShirtConfiguratorState(), garmentId: "tee_dri_fit", colorId: "black" });
+		expect(result.valid).toBe(true);
 	});
 });
 

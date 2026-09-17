@@ -15,7 +15,7 @@ import {
 	getColor,
 	getGarment,
 	getSize,
-	PRODUCTION_METHOD_CONFIG,
+	PRODUCTION_METHOD_DISCLOSURE,
 } from "~/lib/apparel/config";
 import { getReviewReasons } from "~/lib/apparel/compatibility";
 import { computeCustomShirtPrice, formatCents } from "~/lib/apparel/pricing";
@@ -24,7 +24,6 @@ import {
 	validateCustomizationStep,
 	validateDesignSourceStep,
 	validateGarmentStep,
-	validateMethodStep,
 	validateMockupStep,
 	validateSizeStep,
 	type ValidationResult,
@@ -33,7 +32,6 @@ import { createDefaultShirtConfiguratorState, type ShirtConfiguratorState } from
 import { StepShell } from "./StepShell";
 import { GarmentStep } from "./steps/GarmentStep";
 import { SizeStep } from "./steps/SizeStep";
-import { MethodStep } from "./steps/MethodStep";
 import { ColorStep } from "./steps/ColorStep";
 import { DesignStep } from "./steps/DesignStep";
 import { CustomizationStep } from "./steps/CustomizationStep";
@@ -51,7 +49,6 @@ type StepDef = {
 const STEP_DEFS: StepDef[] = [
 	{ id: "garment", title: "Garment", validate: validateGarmentStep, render: (p) => <GarmentStep {...p} /> },
 	{ id: "size", title: "Size", validate: validateSizeStep, render: (p) => <SizeStep {...p} /> },
-	{ id: "method", title: "Production Method", validate: validateMethodStep, render: (p) => <MethodStep {...p} /> },
 	{ id: "color", title: "Shirt Color", validate: validateColorStep, render: (p) => <ColorStep {...p} /> },
 	{ id: "design", title: "Design", validate: validateDesignSourceStep, render: (p) => <DesignStep {...p} /> },
 	{ id: "customization", title: "Customization", validate: validateCustomizationStep, render: (p) => <CustomizationStep {...p} /> },
@@ -65,8 +62,6 @@ function stepSummary(stepId: string, state: ShirtConfiguratorState): string {
 			return getGarment(state.garmentId)?.label ?? "Not selected";
 		case "size":
 			return getSize(state.sizeId)?.label ?? "Not selected";
-		case "method":
-			return state.method ? PRODUCTION_METHOD_CONFIG[state.method].label : "Not selected";
 		case "color":
 			return getColor(state.colorId)?.label ?? "Not selected";
 		case "design":
@@ -144,8 +139,8 @@ export function ShirtConfigurator({ editItemId }: { editItemId: string | null })
 		const garment = getGarment(state.garmentId);
 		const size = getSize(state.sizeId);
 		const color = getColor(state.colorId);
-		if (!garment || !size || !color || !state.method) return;
-		const name = `Custom ${PRODUCTION_METHOD_CONFIG[state.method].shortLabel} Shirt — ${size.label}, ${color.label}`;
+		if (!garment || !size || !color) return;
+		const name = `Custom ${garment.label} — ${size.label}, ${color.label}`;
 
 		const payload = {
 			kind: "custom_shirt" as const,
@@ -176,6 +171,7 @@ export function ShirtConfigurator({ editItemId }: { editItemId: string | null })
 				<p className="mb-3 font-extrabold text-[#7A5C46]">
 					{editingItemId ? "Editing your saved shirt — update anything below." : `Step ${activeStepIndex + 1} of ${STEP_DEFS.length}: ${STEP_DEFS[activeStepIndex].title}`}
 				</p>
+				<p className="mb-3.5 rounded-[14px] bg-[#F4E9D8] p-3 text-sm text-[#7A5C46]">{PRODUCTION_METHOD_DISCLOSURE}</p>
 				{STEP_DEFS.map((stepDef, index) => {
 					const isActive = index === activeStepIndex;
 					const { valid } = stepDef.validate(state);
@@ -220,14 +216,13 @@ function LivePriceSummary({ state }: { state: ShirtConfiguratorState }) {
 	const garment = getGarment(state.garmentId);
 	const size = getSize(state.sizeId);
 	const color = getColor(state.colorId);
-	const method = state.method ? PRODUCTION_METHOD_CONFIG[state.method] : null;
 	const priceResult = garment && size ? computeCustomShirtPrice(state) : null;
 
-	const configLine = [size?.label, garment?.label.replace("Short-Sleeve Tee — ", ""), color?.label, method?.label].filter(Boolean).join(" — ");
+	const configLine = [size?.label, garment?.label, color?.label].filter(Boolean).join(" — ");
 
 	return (
 		<aside className="rounded-[20px] bg-white p-5 shadow-[0_10px_30px_rgba(74,55,40,0.10)] lg:sticky lg:top-24">
-			<h2 className="font-[family-name:var(--font-head)] text-lg font-semibold">Custom HTV / Sublimation Shirt</h2>
+			<h2 className="font-[family-name:var(--font-head)] text-lg font-semibold">Custom Shirt</h2>
 			{configLine && <p className="mt-1 mb-3 text-sm text-[#7A5C46]">{configLine}</p>}
 
 			{priceResult && priceResult.valid ? (

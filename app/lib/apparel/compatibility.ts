@@ -13,8 +13,8 @@ import {
 	FABRIC_CAPABILITIES,
 	PRODUCTION_METHOD,
 	REVIEW_REASON,
-	getColor,
 	getGarment,
+	getMaxDesignDimensionsForFabric,
 	getMaxDesignDimensionsIn,
 	getSize,
 	type ColorOption,
@@ -39,11 +39,26 @@ export function isColorEligible(color: ColorOption, fabric: Fabric, method: Prod
 	return true;
 }
 
-/** Colors available for the given garment + production method. */
-export function getEligibleColors(garmentId: string | null | undefined, method: ProductionMethod | null | undefined): ColorOption[] {
+/**
+ * Colors available for the given garment. `method` is optional and used
+ * only by internal/MNH tooling — the customer-facing configurator no
+ * longer collects a production method (MNH decides it), so omitting it
+ * returns every color the fabric is stocked in.
+ */
+export function getEligibleColors(garmentId: string | null | undefined, method?: ProductionMethod | null): ColorOption[] {
 	const garment = getGarment(garmentId);
 	if (!garment) return [];
 	return COLORS.filter((c) => isColorEligible(c, garment.fabric, method));
+}
+
+/** Effective max design dimensions for the customer-facing configurator (method-independent — see getMaxDesignDimensionsForFabric). */
+export function getMaxDesignDimensionsForGarment(
+	sizeId: string | null | undefined,
+	garmentId: string | null | undefined,
+): MaxDesignDimensions | null {
+	const garment = getGarment(garmentId);
+	if (!garment) return null;
+	return getMaxDesignDimensionsForFabric(sizeId, garment.fabric);
 }
 
 /** Whether a garment supports a production method at all (any eligible color exists). */
@@ -74,14 +89,13 @@ export function getReviewReasons(state: ShirtConfiguratorState): ReviewReason[] 
 	const reasons = new Set<ReviewReason>();
 
 	const garment = getGarment(state.garmentId);
-	const color = getColor(state.colorId);
 
+	// The customer no longer chooses a production method (MNH decides it —
+	// see PRODUCTION_METHOD_DISCLOSURE), so `state.method` is only ever
+	// populated by internal/MNH tooling or an order configured before that
+	// change. When it is set, flag sublimation for review as before.
 	if (state.method === PRODUCTION_METHOD.SUBLIMATION) {
 		reasons.add(REVIEW_REASON.SUBLIMATION_REVIEW);
-		if (garment && color && !isColorEligible(color, garment.fabric, state.method)) {
-			// Should normally be prevented by the color picker, but flag defensively.
-			reasons.add(REVIEW_REASON.PRINT_AREA_REVIEW);
-		}
 	}
 
 	if (state.specialtyHTV && state.specialtyMaterialId) {
@@ -103,8 +117,8 @@ export function getReviewReasons(state: ShirtConfiguratorState): ReviewReason[] 
 	}
 
 	const size = getSize(state.sizeId);
-	if (size && state.method) {
-		const max = getMaxDesignDimensions(state.sizeId, state.method);
+	if (size && garment) {
+		const max = getMaxDesignDimensionsForGarment(state.sizeId, state.garmentId);
 		if (max && !max.limitedByEquipment) {
 			// Garment-specific limit is tighter than equipment max — always worth
 			// a human glance since it means we clamped below the "advertised" max.

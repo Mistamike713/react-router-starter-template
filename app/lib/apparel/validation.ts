@@ -22,20 +22,14 @@ export function validateSizeStep(state: ShirtConfiguratorState): ValidationResul
 	return { valid: Object.keys(errors).length === 0, errors };
 }
 
-export function validateMethodStep(state: ShirtConfiguratorState): ValidationResult {
-	const errors: Record<string, string> = {};
-	if (!state.method) errors.method = "Please choose a production method.";
-	return { valid: Object.keys(errors).length === 0, errors };
-}
-
 export function validateColorStep(state: ShirtConfiguratorState): ValidationResult {
 	const errors: Record<string, string> = {};
 	if (!state.colorId) {
 		errors.colorId = "Please choose a shirt color.";
-	} else if (state.garmentId && state.method) {
-		const eligible = getEligibleColors(state.garmentId, state.method);
+	} else if (state.garmentId) {
+		const eligible = getEligibleColors(state.garmentId);
 		if (!eligible.some((c) => c.id === state.colorId)) {
-			errors.colorId = "That color is not available for the selected garment/production method. Please choose another.";
+			errors.colorId = "That color is not available for the selected garment. Please choose another.";
 		}
 	}
 	return { valid: Object.keys(errors).length === 0, errors };
@@ -104,7 +98,6 @@ const STEP_VALIDATORS: Array<(state: ShirtConfiguratorState) => ValidationResult
 	validateGarmentStep,
 	validateSizeStep,
 	validateColorStep,
-	validateMethodStep,
 	validateDesignSourceStep,
 	validateCustomizationStep,
 	validateMockupStep,

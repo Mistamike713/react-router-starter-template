@@ -23,8 +23,10 @@ export function describeCustomShirt(config: Record<string, unknown>): string {
 	const method = state.method ? PRODUCTION_METHOD_CONFIG[state.method as ProductionMethod] : null;
 	const parts: string[] = [];
 	if (size) parts.push(size.label);
-	if (garment) parts.push(garment.label.replace("Short-Sleeve Tee — ", ""));
+	if (garment) parts.push(garment.label);
 	if (color) parts.push(color.label);
+	// method is set only on orders configured before the production-method
+	// step was removed from the customer flow; shown here for continuity.
 	if (method) parts.push(method.shortLabel);
 	return parts.join(" — ");
 }

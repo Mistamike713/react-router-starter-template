@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { getColor, REVIEW_REASON, type ColorOption, type MaxDesignDimensions, type ReviewReason } from "~/lib/apparel/config";
-import { getMaxDesignDimensions, getReviewReasons } from "~/lib/apparel/compatibility";
+import { getMaxDesignDimensionsForGarment, getReviewReasons } from "~/lib/apparel/compatibility";
 import { computeEffectiveDpi, isLowResolution } from "~/lib/apparel/imageAnalysis";
 import type { ArtworkRef, PlacementState, ShirtConfiguratorState } from "~/lib/apparel/types";
 import { MockupEditor, type MockupEditorHandle } from "../MockupEditor";
@@ -17,17 +17,17 @@ const REVIEW_REASON_LABELS: Record<ReviewReason, string> = {
 };
 
 export function MockupStep({ state, patch, errors, onContinue }: StepProps) {
-	if (!state.sizeId || !state.method || !state.colorId) {
+	if (!state.sizeId || !state.garmentId || !state.colorId) {
 		return (
 			<>
-				<Hint>Complete size, production method, and color first.</Hint>
+				<Hint>Complete garment, size, and color first.</Hint>
 				<ContinueButton onClick={onContinue} />
 			</>
 		);
 	}
 
 	const color = getColor(state.colorId);
-	const maxDims = getMaxDesignDimensions(state.sizeId, state.method);
+	const maxDims = getMaxDesignDimensionsForGarment(state.sizeId, state.garmentId);
 	if (!maxDims) return null;
 	const reviewReasons = getReviewReasons(state);
 
