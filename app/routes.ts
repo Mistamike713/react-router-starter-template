@@ -6,5 +6,6 @@ export default [
 	route("tumbler-configurator", "routes/tumbler-configurator.tsx"),
 	route("api/upload", "routes/api.upload.ts"),
 	route("api/artwork-upload", "routes/api.artwork-upload.ts"),
+	route("api/orders", "routes/api.orders.ts"),
 	route("uploads/:key", "routes/uploads.$key.ts"),
 ] satisfies RouteConfig;
