@@ -535,15 +535,14 @@ export const RUSH_ORDER_CONFIG = {
 
 export const TAX_CONFIG = {
 	enabled: true,
-	// No jurisdiction-specific rate has been supplied yet. Keeping this at 0
-	// avoids silently charging an invented rate; set a real percent (e.g. 7.25
-	// for 7.25%) once MNH confirms the taxing jurisdiction, or replace this
-	// whole module with a real tax service integration.
-	defaultRatePercent: 0,
-	label: "Estimated Sales Tax",
+	// MNH Creations' current jurisdiction rate. Not authoritative — Stripe Tax
+	// (or another real tax service) will replace/validate this in a later
+	// phase. Change this single value to update the rate everywhere it's used.
+	defaultRatePercent: 8.25,
+	label: "Estimated Tax",
 	authoritative: false,
 	disclaimer:
-		"Sales tax shown is an estimate for reference only and is not authoritative. " +
+		"Tax shown is an estimate for reference only and is not authoritative. " +
 		"MNH Creations will confirm final tax due before charging your order.",
 };
 

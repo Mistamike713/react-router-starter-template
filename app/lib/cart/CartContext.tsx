@@ -17,6 +17,7 @@ import {
 	type CartState,
 	type NewCartItemInput,
 } from "./types";
+import { FULFILLMENT_METHOD, type FulfillmentMethod } from "./shipping";
 
 const STORAGE_KEY = "mnh_cart_v1";
 
@@ -28,6 +29,8 @@ export type CartAction =
 	| { type: "UPDATE_ITEM"; id: string; patch: Partial<NewCartItemInput> }
 	| { type: "DUPLICATE_ITEM"; id: string }
 	| { type: "SET_ORDER_NOTES"; notes: string }
+	| { type: "SET_FULFILLMENT_METHOD"; method: FulfillmentMethod }
+	| { type: "SET_DESTINATION_ZIP"; zip: string }
 	| { type: "CLEAR" };
 
 function generateId(): string {
@@ -116,6 +119,12 @@ export function cartReducer(state: CartState, action: CartAction): CartState {
 		case "SET_ORDER_NOTES":
 			return { ...state, orderNotes: action.notes };
 
+		case "SET_FULFILLMENT_METHOD":
+			return { ...state, fulfillmentMethod: action.method };
+
+		case "SET_DESTINATION_ZIP":
+			return { ...state, destinationZip: action.zip };
+
 		case "CLEAR":
 			return createEmptyCartState();
 
@@ -134,6 +143,8 @@ type CartContextValue = {
 	updateItem: (id: string, patch: Partial<NewCartItemInput>) => void;
 	duplicateItem: (id: string) => void;
 	setOrderNotes: (notes: string) => void;
+	setFulfillmentMethod: (method: FulfillmentMethod) => void;
+	setDestinationZip: (zip: string) => void;
 	clear: () => void;
 	getItem: (id: string) => CartItem | null;
 };
@@ -146,7 +157,14 @@ function readStoredState(): CartState | null {
 		if (!raw) return null;
 		const parsed = JSON.parse(raw);
 		if (!parsed || !Array.isArray(parsed.items)) return null;
-		return { items: parsed.items, orderNotes: typeof parsed.orderNotes === "string" ? parsed.orderNotes : "" };
+		// Older saved carts predate fulfillmentMethod/destinationZip — default
+		// them in rather than losing the saved cart.
+		return {
+			items: parsed.items,
+			orderNotes: typeof parsed.orderNotes === "string" ? parsed.orderNotes : "",
+			fulfillmentMethod: parsed.fulfillmentMethod === FULFILLMENT_METHOD.SHIPPING ? FULFILLMENT_METHOD.SHIPPING : FULFILLMENT_METHOD.PICKUP,
+			destinationZip: typeof parsed.destinationZip === "string" ? parsed.destinationZip : "",
+		};
 	} catch {
 		return null;
 	}
@@ -182,11 +200,28 @@ export function CartProvider({ children }: { children: ReactNode }) {
 	const updateItem = useCallback((id: string, patch: Partial<NewCartItemInput>) => dispatch({ type: "UPDATE_ITEM", id, patch }), []);
 	const duplicateItem = useCallback((id: string) => dispatch({ type: "DUPLICATE_ITEM", id }), []);
 	const setOrderNotes = useCallback((notes: string) => dispatch({ type: "SET_ORDER_NOTES", notes }), []);
+	const setFulfillmentMethod = useCallback((method: FulfillmentMethod) => dispatch({ type: "SET_FULFILLMENT_METHOD", method }), []);
+	const setDestinationZip = useCallback((zip: string) => dispatch({ type: "SET_DESTINATION_ZIP", zip }), []);
 	const clear = useCallback(() => dispatch({ type: "CLEAR" }), []);
 	const getItem = useCallback((id: string) => state.items.find((i) => i.id === id) ?? null, [state.items]);
 
 	return (
-		<CartContext.Provider value={{ state, hydrated, addItem, removeItem, updateQuantity, updateItem, duplicateItem, setOrderNotes, clear, getItem }}>
+		<CartContext.Provider
+			value={{
+				state,
+				hydrated,
+				addItem,
+				removeItem,
+				updateQuantity,
+				updateItem,
+				duplicateItem,
+				setOrderNotes,
+				setFulfillmentMethod,
+				setDestinationZip,
+				clear,
+				getItem,
+			}}
+		>
 			{children}
 		</CartContext.Provider>
 	);

@@ -1,4 +1,6 @@
-export type CartItemKind = "simple_product" | "custom_shirt";
+import { FULFILLMENT_METHOD, type FulfillmentMethod } from "./shipping";
+
+export type CartItemKind = "simple_product" | "custom_shirt" | "custom_tumbler";
 
 export type CartItem = {
 	id: string;
@@ -19,10 +21,14 @@ export type CartItem = {
 export type CartState = {
 	items: CartItem[];
 	orderNotes: string;
+	/** How the order will reach the customer. Defaults to pickup so an empty cart never demands a ZIP. */
+	fulfillmentMethod: FulfillmentMethod;
+	/** Only meaningful (and validated) when fulfillmentMethod === "shipping". */
+	destinationZip: string;
 };
 
 export function createEmptyCartState(): CartState {
-	return { items: [], orderNotes: "" };
+	return { items: [], orderNotes: "", fulfillmentMethod: FULFILLMENT_METHOD.PICKUP, destinationZip: "" };
 }
 
 export type NewCartItemInput = {

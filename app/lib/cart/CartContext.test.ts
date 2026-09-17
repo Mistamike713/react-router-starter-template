@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { cartReducer } from "./CartContext";
 import { createEmptyCartState, getCartItemCount, getCartSubtotalCents, type CartState, type NewCartItemInput } from "./types";
+import { FULFILLMENT_METHOD } from "./shipping";
 
 function addItem(state: CartState, input: NewCartItemInput) {
 	return cartReducer(state, { type: "ADD_ITEM", item: input });
@@ -86,5 +87,19 @@ describe("cartReducer", () => {
 		let state = createEmptyCartState();
 		state = cartReducer(state, { type: "SET_ORDER_NOTES", notes: "Please rush if possible" });
 		expect(state.orderNotes).toBe("Please rush if possible");
+	});
+
+	test("a new cart defaults to local pickup with no destination ZIP required", () => {
+		const state = createEmptyCartState();
+		expect(state.fulfillmentMethod).toBe(FULFILLMENT_METHOD.PICKUP);
+		expect(state.destinationZip).toBe("");
+	});
+
+	test("SET_FULFILLMENT_METHOD and SET_DESTINATION_ZIP update cart-level shipping choice", () => {
+		let state = createEmptyCartState();
+		state = cartReducer(state, { type: "SET_FULFILLMENT_METHOD", method: FULFILLMENT_METHOD.SHIPPING });
+		state = cartReducer(state, { type: "SET_DESTINATION_ZIP", zip: "77484" });
+		expect(state.fulfillmentMethod).toBe(FULFILLMENT_METHOD.SHIPPING);
+		expect(state.destinationZip).toBe("77484");
 	});
 });

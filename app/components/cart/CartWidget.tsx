@@ -10,13 +10,21 @@ import { Link } from "react-router";
 import { useCart } from "~/lib/cart/CartContext";
 import { getCartItemCount, getCartSubtotalCents, type CartItem } from "~/lib/cart/types";
 import { computeTax } from "~/lib/cart/tax";
+import { computeShippingEstimate, validateDestinationZip, FULFILLMENT_METHOD, type FulfillmentMethod } from "~/lib/cart/shipping";
 import { formatCents } from "~/lib/apparel/pricing";
 import { describeCartItem, customShirtDetailLines } from "~/lib/cart/describeCartItem";
 
 const CONTACT_EMAIL = "info@mnhcreations.com";
 
-function buildOrderSummaryText(items: CartItem[], orderNotes: string, subtotalCents: number): string {
+function buildOrderSummaryText(
+	items: CartItem[],
+	orderNotes: string,
+	subtotalCents: number,
+	fulfillmentMethod: FulfillmentMethod,
+	destinationZip: string,
+): string {
 	const tax = computeTax(subtotalCents);
+	const shipping = computeShippingEstimate(fulfillmentMethod, destinationZip);
 	const lines = ["MNH Creations — Order Request", ""];
 	items.forEach((item, idx) => {
 		lines.push(`${idx + 1}. ${item.name} ×${item.quantity} — ${formatCents(item.extendedPriceCents)}`);
@@ -30,9 +38,11 @@ function buildOrderSummaryText(items: CartItem[], orderNotes: string, subtotalCe
 		}
 		lines.push("");
 	});
+	lines.push(fulfillmentMethod === FULFILLMENT_METHOD.PICKUP ? "Fulfillment: Local Pickup" : `Fulfillment: Ship to ${destinationZip}`);
 	lines.push(`Subtotal: ${formatCents(subtotalCents)}`);
 	lines.push(`${tax.label}: ${formatCents(tax.taxCents)}${tax.authoritative ? "" : " (estimate)"}`);
-	lines.push(`Total: ${formatCents(subtotalCents + tax.taxCents)}`);
+	lines.push(`${shipping.label}: ${formatCents(shipping.shippingCents)}${shipping.authoritative ? "" : " (estimate)"}`);
+	lines.push(`Estimated Total: ${formatCents(subtotalCents + tax.taxCents + shipping.shippingCents)}`);
 	if (orderNotes) lines.push("", "Notes for MNH Creations:", orderNotes);
 	return lines.join("\n");
 }
@@ -41,16 +51,24 @@ export function CartWidget() {
 	const cart = useCart();
 	const [isOpen, setIsOpen] = useState(false);
 	const [mounted, setMounted] = useState(false);
+	const [zipTouched, setZipTouched] = useState(false);
 	useEffect(() => setMounted(true), []);
 	const items = cart.state.items;
 	const itemCount = getCartItemCount(cart.state);
 	const subtotalCents = getCartSubtotalCents(cart.state);
 	const tax = computeTax(subtotalCents);
+	const shipping = computeShippingEstimate(cart.state.fulfillmentMethod, cart.state.destinationZip);
+	const zipValidation = validateDestinationZip(cart.state.fulfillmentMethod, cart.state.destinationZip);
+	const estimatedTotalCents = subtotalCents + tax.taxCents + shipping.shippingCents;
 
 	const handleSubmitOrder = () => {
 		if (items.length === 0) return;
+		if (!zipValidation.valid) {
+			setZipTouched(true);
+			return;
+		}
 		const subject = "MNH Creations — Order Request";
-		const body = buildOrderSummaryText(items, cart.state.orderNotes, subtotalCents);
+		const body = buildOrderSummaryText(items, cart.state.orderNotes, subtotalCents, cart.state.fulfillmentMethod, cart.state.destinationZip);
 		window.location.href = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 	};
 
@@ -104,6 +122,53 @@ export function CartWidget() {
 							)}
 
 							<div className="border-t border-[#F4E9D8] bg-white px-5 pt-4 pb-5">
+								<fieldset className="mb-3.5">
+									<legend className="mb-1.5 text-sm font-bold">How will you get your order?</legend>
+									<div className="flex gap-4 text-sm">
+										<label className="inline-flex items-center gap-1.5">
+											<input
+												type="radio"
+												name="fulfillment-method"
+												checked={cart.state.fulfillmentMethod === FULFILLMENT_METHOD.PICKUP}
+												onChange={() => cart.setFulfillmentMethod(FULFILLMENT_METHOD.PICKUP)}
+											/>
+											Local Pickup
+										</label>
+										<label className="inline-flex items-center gap-1.5">
+											<input
+												type="radio"
+												name="fulfillment-method"
+												checked={cart.state.fulfillmentMethod === FULFILLMENT_METHOD.SHIPPING}
+												onChange={() => cart.setFulfillmentMethod(FULFILLMENT_METHOD.SHIPPING)}
+											/>
+											Ship to Me
+										</label>
+									</div>
+								</fieldset>
+
+								{cart.state.fulfillmentMethod === FULFILLMENT_METHOD.SHIPPING && (
+									<div className="mb-3.5 flex flex-col gap-1.5">
+										<label htmlFor="cart-destination-zip" className="text-sm font-bold">
+											Destination ZIP Code
+										</label>
+										<input
+											id="cart-destination-zip"
+											type="text"
+											inputMode="numeric"
+											value={cart.state.destinationZip}
+											onChange={(e) => cart.setDestinationZip(e.target.value)}
+											onBlur={() => setZipTouched(true)}
+											placeholder="e.g. 77484"
+											className="rounded-[14px] border-[1.5px] border-[#F4E9D8] bg-[#FFF7EC] px-3 py-2 text-sm"
+										/>
+										{zipTouched && !zipValidation.valid && (
+											<p role="alert" className="text-sm text-[#a33]">
+												{zipValidation.error}
+											</p>
+										)}
+									</div>
+								)}
+
 								<div className="mb-3.5 flex flex-col gap-1.5">
 									<label htmlFor="cart-order-notes" className="text-sm font-bold">
 										Notes for MNH Creations
@@ -126,20 +191,25 @@ export function CartWidget() {
 									<span>{tax.label}{tax.authoritative ? "" : " (est.)"}</span>
 									<span>{formatCents(tax.taxCents)}</span>
 								</div>
+								<div className="flex justify-between py-1 text-sm">
+									<span>{shipping.label}{shipping.authoritative ? "" : " (est.)"}</span>
+									<span>{formatCents(shipping.shippingCents)}</span>
+								</div>
 								<div className="mt-1 flex justify-between border-t border-[#F4E9D8] pt-2 text-base font-extrabold">
-									<span>Total</span>
-									<span>{formatCents(subtotalCents + tax.taxCents)}</span>
+									<span>Estimated Total</span>
+									<span>{formatCents(estimatedTotalCents)}</span>
 								</div>
 
 								<button
 									type="button"
-									disabled={items.length === 0}
+									disabled={items.length === 0 || !zipValidation.valid}
 									onClick={handleSubmitOrder}
 									className="mt-3 w-full rounded-full bg-[#C9713D] px-6 py-3 text-sm font-extrabold text-white transition hover:bg-[#A85B2E] disabled:cursor-not-allowed disabled:opacity-50"
 								>
 									Submit Order Request
 								</button>
 								<p className="mt-2 text-[0.72rem] text-[#7A5C46]">{tax.disclaimer}</p>
+								<p className="text-[0.72rem] text-[#7A5C46]">{shipping.disclaimer}</p>
 							</div>
 						</aside>
 					</>,
