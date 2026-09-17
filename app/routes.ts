@@ -7,5 +7,7 @@ export default [
 	route("api/upload", "routes/api.upload.ts"),
 	route("api/artwork-upload", "routes/api.artwork-upload.ts"),
 	route("api/orders", "routes/api.orders.ts"),
+	route("api/checkout", "routes/api.checkout.ts"),
+	route("checkout/success", "routes/checkout.success.tsx"),
 	route("uploads/:key", "routes/uploads.$key.ts"),
 ] satisfies RouteConfig;
