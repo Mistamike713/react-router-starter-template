@@ -216,7 +216,7 @@ export default function Home() {
 					</div>
 				</section>
 
-				<section id="products" className="py-16">
+				<section id="products" className="scroll-mt-20 py-16">
 					<div className="mx-auto max-w-[1100px] px-6">
 						<h2 className="text-center font-[family-name:var(--font-head)] text-[clamp(1.7rem,3vw,2.2rem)] font-semibold">
 							Shop by Category
@@ -255,7 +255,7 @@ export default function Home() {
 					</div>
 				</section>
 
-				<section id="how-it-works" className="bg-[#F4E9D8] py-16">
+				<section id="how-it-works" className="scroll-mt-20 bg-[#F4E9D8] py-16">
 					<div className="mx-auto max-w-[1100px] px-6">
 						<h2 className="text-center font-[family-name:var(--font-head)] text-[clamp(1.7rem,3vw,2.2rem)] font-semibold">
 							How It Works
@@ -274,7 +274,7 @@ export default function Home() {
 					</div>
 				</section>
 
-				<section id="contact" className="py-16 pb-24">
+				<section id="contact" className="scroll-mt-20 py-16 pb-24">
 					<div className="mx-auto grid max-w-[1100px] grid-cols-1 gap-12 px-6 md:grid-cols-[1fr_1.3fr]">
 						<div>
 							<h2 className="font-[family-name:var(--font-head)] text-[clamp(1.7rem,3vw,2.2rem)] font-semibold">

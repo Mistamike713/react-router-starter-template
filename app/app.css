@@ -17,6 +17,13 @@ body {
 	}
 }
 
+/* Consistent, visible keyboard focus everywhere, as a baseline under any
+   element-specific focus-visible utility classes. */
+:focus-visible {
+	outline: 2px solid #c9713d;
+	outline-offset: 2px;
+}
+
 /* MNH fixed background branding. Core color matches the logo image's native background. */
 body:has(main#top) div[aria-hidden="true"][style*="radial-gradient"] {
 	top: -4.75rem !important;
@@ -62,6 +69,13 @@ body:has(main#top) main,
 body:has(main#top) footer {
 	position: relative;
 	z-index: 1;
+}
+
+/* The header's own stacking context must sit above <main>'s so its dropdown
+   menu (an absolutely-positioned child of the header) isn't painted behind
+   page content that follows it in the DOM at the same z-index. */
+body:has(main#top) header {
+	z-index: 2;
 }
 
 body:has(main#top) main#top > section:first-child img[alt^="MNH Creations"] {
