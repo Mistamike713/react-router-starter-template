@@ -28,6 +28,8 @@ export function CartWidget() {
 	const [mounted, setMounted] = useState(false);
 	const [zipTouched, setZipTouched] = useState(false);
 	const [contactTouched, setContactTouched] = useState(false);
+	const [checkoutPending, setCheckoutPending] = useState(false);
+	const [checkoutError, setCheckoutError] = useState("");
 	useEffect(() => setMounted(true), []);
 	const items = cart.state.items;
 	const itemCount = getCartItemCount(cart.state);
@@ -41,7 +43,7 @@ export function CartWidget() {
 	const contactValid = nameValid && emailValid;
 	const canSubmit = items.length > 0 && zipValidation.valid && contactValid;
 
-	const handleSubmitOrder = () => {
+	const handleSubmitOrder = async () => {
 		if (items.length === 0) return;
 		if (!contactValid) {
 			setContactTouched(true);
@@ -52,20 +54,37 @@ export function CartWidget() {
 			setZipTouched(true);
 			return;
 		}
-		const subject = "MNH Creations — Order Request";
-		const body = buildOrderSummaryText({
-			orderReference: generateOrderReference(),
-			customer: cart.state.customer,
-			items,
-			orderNotes: cart.state.orderNotes,
-			subtotalCents,
-			fulfillmentMethod: cart.state.fulfillmentMethod,
-			destinationZip: cart.state.destinationZip,
-			shippingAddress: cart.state.shippingAddress,
-		});
-		window.location.href = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-	};
+		setCheckoutPending(true);
+		setCheckoutError("");
+		try {
+			const orderResponse = await fetch("/api/orders", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					customer: cart.state.customer,
+					fulfillmentMethod: cart.state.fulfillmentMethod,
+					destinationZip: cart.state.destinationZip,
+					shippingAddress: cart.state.shippingAddress,
+					orderNotes: cart.state.orderNotes,
+					items,
+				}),
+			});
+			const order = await orderResponse.json() as { orderId?: string; error?: string };
+			if (!orderResponse.ok || !order.orderId) throw new Error(order.error || "Unable to create order.");
 
+			const checkoutResponse = await fetch("/api/checkout", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ orderId: order.orderId }),
+			});
+			const checkout = await checkoutResponse.json() as { checkoutUrl?: string; error?: string };
+			if (!checkoutResponse.ok || !checkout.checkoutUrl) throw new Error(checkout.error || "Unable to start checkout.");
+			window.location.assign(checkout.checkoutUrl);
+		} catch (error) {
+			setCheckoutError(error instanceof Error ? error.message : "Unable to start checkout.");
+			setCheckoutPending(false);
+		}
+	};
 	return (
 		<>
 			<button
@@ -246,12 +265,13 @@ export function CartWidget() {
 
 								<button
 									type="button"
-									disabled={!canSubmit}
+									disabled={!canSubmit || checkoutPending}
 									onClick={handleSubmitOrder}
 									className="mt-3 w-full rounded-full bg-[#C9713D] px-6 py-3 text-sm font-extrabold text-white transition hover:bg-[#A85B2E] disabled:cursor-not-allowed disabled:opacity-50"
 								>
-									Submit Order Request
+									{checkoutPending ? "Starting Secure Checkout…" : "Proceed to Secure Checkout"}
 								</button>
+								{checkoutError && <p role="alert" className="mt-2 text-sm font-bold text-[#a33]">{checkoutError}</p>}
 								<p className="mt-2 text-[0.72rem] text-[#7A5C46]">{tax.disclaimer}</p>
 								<p className="text-[0.72rem] text-[#7A5C46]">{shipping.disclaimer}</p>
 							</div>
