@@ -17,38 +17,40 @@ body {
 	}
 }
 
-/* MNH fixed background branding: warm center with a very broad continuous fade. */
+/* MNH fixed background branding: soft circular field with no visible image box. */
 body:has(main#top) div[aria-hidden="true"][style*="radial-gradient"] {
 	top: -4.75rem !important;
 	right: -4.75rem !important;
 	width: 21rem !important;
 	height: 21rem !important;
 	z-index: 0 !important;
+	border-radius: 50% !important;
 	background: radial-gradient(
-		circle at 38% 42%,
-		#f4ddd0 0%,
-		#efcbb7 28%,
-		rgb(234 190 164 / 0.88) 46%,
-		rgb(235 197 173 / 0.62) 60%,
-		rgb(239 207 186 / 0.40) 72%,
-		rgb(244 219 201 / 0.22) 82%,
-		rgb(248 230 215 / 0.11) 90%,
-		rgb(253 244 234 / 0.035) 97%,
+		circle at 40% 43%,
+		#f5ded1 0%,
+		#f0cdb9 30%,
+		rgb(235 192 166 / 0.82) 48%,
+		rgb(238 203 180 / 0.55) 63%,
+		rgb(243 216 197 / 0.31) 76%,
+		rgb(248 230 216 / 0.14) 87%,
+		rgb(253 244 234 / 0.04) 96%,
 		transparent 100%
 	) !important;
 	box-shadow: none;
+	-webkit-mask-image: radial-gradient(circle at 50% 50%, #000 0%, #000 68%, rgb(0 0 0 / 0.88) 76%, rgb(0 0 0 / 0.55) 86%, rgb(0 0 0 / 0.18) 94%, transparent 100%);
+	mask-image: radial-gradient(circle at 50% 50%, #000 0%, #000 68%, rgb(0 0 0 / 0.88) 76%, rgb(0 0 0 / 0.55) 86%, rgb(0 0 0 / 0.18) 94%, transparent 100%);
 }
 
 body:has(main#top) div[aria-hidden="true"][style*="radial-gradient"] > img[src="/logo.PNG"] {
 	width: 84% !important;
 	height: 84% !important;
 	opacity: 0.59 !important;
+	border-radius: 50% !important;
 	mix-blend-mode: multiply !important;
-	/* Slightly warmer/rosier while preserving the original multicolor character. */
-	filter: sepia(8%) saturate(148%) hue-rotate(-3deg) brightness(1.09) contrast(0.78) !important;
-	/* Start feathering early; the final third is deliberately extremely gradual. */
-	-webkit-mask-image: radial-gradient(ellipse at center, #000 0%, #000 27%, rgb(0 0 0 / 0.98) 37%, rgb(0 0 0 / 0.91) 47%, rgb(0 0 0 / 0.79) 57%, rgb(0 0 0 / 0.64) 67%, rgb(0 0 0 / 0.47) 76%, rgb(0 0 0 / 0.30) 84%, rgb(0 0 0 / 0.17) 90%, rgb(0 0 0 / 0.08) 95%, rgb(0 0 0 / 0.025) 98%, transparent 100%);
-	mask-image: radial-gradient(ellipse at center, #000 0%, #000 27%, rgb(0 0 0 / 0.98) 37%, rgb(0 0 0 / 0.91) 47%, rgb(0 0 0 / 0.79) 57%, rgb(0 0 0 / 0.64) 67%, rgb(0 0 0 / 0.47) 76%, rgb(0 0 0 / 0.30) 84%, rgb(0 0 0 / 0.17) 90%, rgb(0 0 0 / 0.08) 95%, rgb(0 0 0 / 0.025) 98%, transparent 100%);
+	filter: sepia(7%) saturate(146%) hue-rotate(-3deg) brightness(1.1) contrast(0.76) !important;
+	/* Circular crop begins well inside the original square, then dissolves slowly. */
+	-webkit-mask-image: radial-gradient(circle at center, #000 0%, #000 25%, rgb(0 0 0 / 0.98) 34%, rgb(0 0 0 / 0.90) 43%, rgb(0 0 0 / 0.76) 52%, rgb(0 0 0 / 0.60) 61%, rgb(0 0 0 / 0.44) 69%, rgb(0 0 0 / 0.30) 76%, rgb(0 0 0 / 0.19) 82%, rgb(0 0 0 / 0.11) 87%, rgb(0 0 0 / 0.055) 91%, rgb(0 0 0 / 0.02) 94%, transparent 97%);
+	mask-image: radial-gradient(circle at center, #000 0%, #000 25%, rgb(0 0 0 / 0.98) 34%, rgb(0 0 0 / 0.90) 43%, rgb(0 0 0 / 0.76) 52%, rgb(0 0 0 / 0.60) 61%, rgb(0 0 0 / 0.44) 69%, rgb(0 0 0 / 0.30) 76%, rgb(0 0 0 / 0.19) 82%, rgb(0 0 0 / 0.11) 87%, rgb(0 0 0 / 0.055) 91%, rgb(0 0 0 / 0.02) 94%, transparent 97%);
 	-webkit-mask-repeat: no-repeat;
 	mask-repeat: no-repeat;
 	-webkit-mask-size: 100% 100%;
