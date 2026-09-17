@@ -102,4 +102,17 @@ describe("cartReducer", () => {
 		expect(state.fulfillmentMethod).toBe(FULFILLMENT_METHOD.SHIPPING);
 		expect(state.destinationZip).toBe("77484");
 	});
+
+	test("SET_SHIPPING_ADDRESS stores the shipping address", () => {
+		let state = createEmptyCartState();
+		state = cartReducer(state, { type: "SET_SHIPPING_ADDRESS", address: "123 Main St, Katy, TX" });
+		expect(state.shippingAddress).toBe("123 Main St, Katy, TX");
+	});
+
+	test("SET_CUSTOMER_INFO merges a partial patch into existing customer info", () => {
+		let state = createEmptyCartState();
+		state = cartReducer(state, { type: "SET_CUSTOMER_INFO", patch: { name: "Jordan Rivera" } });
+		state = cartReducer(state, { type: "SET_CUSTOMER_INFO", patch: { email: "jordan@example.com" } });
+		expect(state.customer).toEqual({ name: "Jordan Rivera", email: "jordan@example.com", phone: "" });
+	});
 });

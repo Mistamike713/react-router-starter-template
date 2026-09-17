@@ -18,6 +18,16 @@ export type CartItem = {
 	updatedAt: number;
 };
 
+export type CustomerInfo = {
+	name: string;
+	email: string;
+	phone: string;
+};
+
+export function createEmptyCustomerInfo(): CustomerInfo {
+	return { name: "", email: "", phone: "" };
+}
+
 export type CartState = {
 	items: CartItem[];
 	orderNotes: string;
@@ -25,10 +35,20 @@ export type CartState = {
 	fulfillmentMethod: FulfillmentMethod;
 	/** Only meaningful (and validated) when fulfillmentMethod === "shipping". */
 	destinationZip: string;
+	/** Full street/city/state, only meaningful when fulfillmentMethod === "shipping". */
+	shippingAddress: string;
+	customer: CustomerInfo;
 };
 
 export function createEmptyCartState(): CartState {
-	return { items: [], orderNotes: "", fulfillmentMethod: FULFILLMENT_METHOD.PICKUP, destinationZip: "" };
+	return {
+		items: [],
+		orderNotes: "",
+		fulfillmentMethod: FULFILLMENT_METHOD.PICKUP,
+		destinationZip: "",
+		shippingAddress: "",
+		customer: createEmptyCustomerInfo(),
+	};
 }
 
 export type NewCartItemInput = {

@@ -43,13 +43,30 @@ export function customShirtDetailLines(config: Record<string, unknown>): string[
 	if (state.number && state.numberValue) lines.push(`Number: "${state.numberValue}"`);
 	if (state.designSource) {
 		if (state.designSource === DESIGN_SOURCE.UPLOAD_OWN) {
-			const fileName = state.frontArtwork?.fileName;
-			lines.push(`Design: uploaded artwork${fileName ? ` (${fileName})` : ""}`);
+			lines.push("Design source: customer-uploaded artwork");
+		} else if (state.designSource === DESIGN_SOURCE.CUSTOMIZE_EXISTING) {
+			lines.push(`Design source: customize MNH design${state.existingDesignRef ? ` (${state.existingDesignRef})` : ""}`);
 		} else if (state.designServiceLevel) {
 			const svc = DESIGN_SERVICE_CONFIG[state.designServiceLevel];
 			lines.push(`Design service: ${svc ? svc.label : state.designServiceLevel}`);
 		}
 	}
+	if (state.frontPlacement) {
+		lines.push(`Front design size: ${state.frontPlacement.widthIn.toFixed(1)}in x ${state.frontPlacement.heightIn.toFixed(1)}in`);
+	}
+	if (state.backDesign && state.backPlacement) {
+		lines.push(`Back design size: ${state.backPlacement.widthIn.toFixed(1)}in x ${state.backPlacement.heightIn.toFixed(1)}in`);
+	}
+	if (state.frontArtwork) {
+		lines.push(`View / Download Customer Artwork (Front) — ${state.frontArtwork.fileName}: ${state.frontArtwork.url}`);
+	}
+	if (state.backDesign && state.backArtwork) {
+		lines.push(`View / Download Customer Artwork (Back) — ${state.backArtwork.fileName}: ${state.backArtwork.url}`);
+	}
+	if (state.inspirationArtwork) {
+		lines.push(`View / Download Inspiration Reference — ${state.inspirationArtwork.fileName}: ${state.inspirationArtwork.url}`);
+	}
+	if (state.mockupAcknowledged) lines.push("Customer confirmed the on-screen placement mockup");
 	if (state.proofRequested) lines.push("Proof requested before production");
 	return lines;
 }
