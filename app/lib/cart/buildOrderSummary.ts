@@ -8,7 +8,7 @@
 
 import { computeTax } from "./tax";
 import { computeShippingEstimate, FULFILLMENT_METHOD, type FulfillmentMethod } from "./shipping";
-import { describeCartItem, customShirtDetailLines } from "./describeCartItem";
+import { describeCartItem, customShirtDetailLines, customTumblerDetailLines } from "./describeCartItem";
 import { formatCents } from "../apparel/pricing";
 import type { CartItem, CustomerInfo } from "./types";
 
@@ -47,6 +47,12 @@ export function buildOrderSummaryText(params: {
 		if (description) lines.push(`   ${description}`);
 		if (item.kind === "custom_shirt") {
 			customShirtDetailLines(item.config).forEach((l) => lines.push(`   - ${l}`));
+			const instructions = item.config.instructions;
+			if (typeof instructions === "string" && instructions) lines.push(`   Instructions: ${instructions}`);
+			if (item.reviewRequired) lines.push(`   [Subject to MNH review: ${item.reviewReasons.join(", ")}]`);
+		}
+		if (item.kind === "custom_tumbler") {
+			customTumblerDetailLines(item.config).forEach((l) => lines.push(`   - ${l}`));
 			const instructions = item.config.instructions;
 			if (typeof instructions === "string" && instructions) lines.push(`   Instructions: ${instructions}`);
 			if (item.reviewRequired) lines.push(`   [Subject to MNH review: ${item.reviewReasons.join(", ")}]`);

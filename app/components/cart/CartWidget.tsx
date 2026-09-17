@@ -14,7 +14,7 @@ import { computeShippingEstimate, validateDestinationZip, FULFILLMENT_METHOD } f
 import { generateOrderReference } from "~/lib/cart/orderReference";
 import { buildOrderSummaryText } from "~/lib/cart/buildOrderSummary";
 import { formatCents } from "~/lib/apparel/pricing";
-import { describeCartItem, customShirtDetailLines } from "~/lib/cart/describeCartItem";
+import { describeCartItem, customShirtDetailLines, customTumblerDetailLines } from "~/lib/cart/describeCartItem";
 
 const CONTACT_EMAIL = "info@mnhcreations.com";
 
@@ -262,7 +262,12 @@ export function CartWidget() {
 function CartItemRow({ item }: { item: CartItem }) {
 	const cart = useCart();
 	const description = describeCartItem(item);
-	const details = item.kind === "custom_shirt" ? customShirtDetailLines(item.config) : [];
+	const details =
+		item.kind === "custom_shirt"
+			? customShirtDetailLines(item.config)
+			: item.kind === "custom_tumbler"
+				? customTumblerDetailLines(item.config)
+				: [];
 
 	return (
 		<div className="border-b border-[#F4E9D8] py-4">
@@ -310,6 +315,11 @@ function CartItemRow({ item }: { item: CartItem }) {
 			<div className="mt-2 flex gap-3.5 text-[0.85rem] font-bold">
 				{item.kind === "custom_shirt" && (
 					<Link to={`/shirt-configurator?editId=${encodeURIComponent(item.id)}`} className="text-[#A85B2E] underline">
+						Edit
+					</Link>
+				)}
+				{item.kind === "custom_tumbler" && (
+					<Link to={`/tumbler-configurator?editId=${encodeURIComponent(item.id)}`} className="text-[#A85B2E] underline">
 						Edit
 					</Link>
 				)}

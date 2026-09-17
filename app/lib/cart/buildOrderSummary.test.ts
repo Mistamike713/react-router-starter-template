@@ -123,6 +123,39 @@ describe("buildOrderSummaryText", () => {
 		expect(text).toContain("Estimated Total");
 	});
 
+	test("includes tumbler artwork links and financial totals in a mixed apparel + tumbler cart", () => {
+		const tumblerItem: CartItem = {
+			id: "cartitem_2",
+			kind: "custom_tumbler",
+			productId: "16oz-snow-globe",
+			name: "Custom Tumbler — 16oz — Snow Globe (Snow globe style)",
+			quantity: 1,
+			unitPriceCents: 2000,
+			extendedPriceCents: 2000,
+			reviewRequired: true,
+			reviewReasons: ["CUSTOM_TUMBLER_REVIEW"],
+			config: {
+				productId: "16oz-snow-globe",
+				finishOptionId: "snow_globe",
+				artwork: { key: "wrap1", url: "https://mnhcreations.example/uploads/wrap1", fileName: "wrap.png", mimeType: "image/png", artworkKind: "raster" },
+			},
+			addedAt: 0,
+			updatedAt: 0,
+		};
+		const text = buildOrderSummaryText({
+			orderReference: "MNH-TEST-0008",
+			customer: customerInfo(),
+			items: [shirtItem(), tumblerItem],
+			orderNotes: "",
+			subtotalCents: 4500,
+			fulfillmentMethod: FULFILLMENT_METHOD.PICKUP,
+			destinationZip: "",
+			shippingAddress: "",
+		});
+		expect(text).toContain("https://mnhcreations.example/uploads/wrap1");
+		expect(text).toContain("Merchandise Subtotal: $45.00");
+	});
+
 	test("is readable/organized text, not JSON, even with special characters in notes", () => {
 		const text = buildOrderSummaryText({
 			orderReference: "MNH-TEST-0007",

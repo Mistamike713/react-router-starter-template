@@ -13,6 +13,8 @@ import {
 	type ProductionMethod,
 } from "../apparel/config";
 import type { ShirtConfiguratorState } from "../apparel/types";
+import { getTumblerFinishOption, getTumblerProduct } from "../tumbler/config";
+import type { TumblerConfiguratorState } from "../tumbler/types";
 import type { CartItem } from "./types";
 
 export function describeCustomShirt(config: Record<string, unknown>): string {
@@ -71,7 +73,40 @@ export function customShirtDetailLines(config: Record<string, unknown>): string[
 	return lines;
 }
 
+export function describeCustomTumbler(config: Record<string, unknown>): string {
+	const state = config as Partial<TumblerConfiguratorState>;
+	const product = getTumblerProduct(state.productId ?? null);
+	const finish = getTumblerFinishOption(product, state.finishOptionId ?? null);
+	const parts: string[] = [];
+	if (product) parts.push(product.label);
+	if (finish) parts.push(finish.label);
+	return parts.join(" — ");
+}
+
+export function customTumblerDetailLines(config: Record<string, unknown>): string[] {
+	const state = config as Partial<TumblerConfiguratorState>;
+	const lines: string[] = [];
+	if (state.personalizationText) lines.push(`Personalization: "${state.personalizationText}"`);
+	if (state.designSource === "upload_own") {
+		lines.push("Design source: customer-uploaded wrap artwork");
+	} else if (state.designSource === "create_for_me") {
+		lines.push("Design source: MNH Creations designs it");
+	}
+	if (state.placement) {
+		lines.push(`Wrap design size: ${state.placement.widthIn.toFixed(1)}in x ${state.placement.heightIn.toFixed(1)}in`);
+	}
+	if (state.artwork) {
+		lines.push(`View / Download Customer Artwork — ${state.artwork.fileName}: ${state.artwork.url}`);
+	}
+	if (state.inspirationArtwork) {
+		lines.push(`View / Download Inspiration Reference — ${state.inspirationArtwork.fileName}: ${state.inspirationArtwork.url}`);
+	}
+	if (state.mockupAcknowledged) lines.push("Customer confirmed the on-screen placement mockup");
+	return lines;
+}
+
 export function describeCartItem(item: CartItem): string {
 	if (item.kind === "custom_shirt") return describeCustomShirt(item.config);
+	if (item.kind === "custom_tumbler") return describeCustomTumbler(item.config);
 	return typeof item.config.description === "string" ? item.config.description : "";
 }

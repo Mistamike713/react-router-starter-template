@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { CartWidget } from "~/components/cart/CartWidget";
-import { useCart } from "~/lib/cart/CartContext";
 
 const CONTACT_EMAIL = "info@mnhcreations.com";
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024; // 8MB, matches the server-side limit
@@ -77,9 +76,6 @@ const products: Product[] = [
 	},
 ];
 
-const optionValue = (productName: string, option: ProductOption) =>
-	`${productName} — ${option.label} ($${option.price})`;
-
 const steps = [
 	{
 		title: "Pick a size & style",
@@ -96,14 +92,11 @@ const steps = [
 ];
 
 export default function Home() {
-	const cart = useCart();
-	const [selectedOption, setSelectedOption] = useState("");
 	const [formNote, setFormNote] = useState("");
 	const [imageFile, setImageFile] = useState<File | null>(null);
 	const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
 	const [imageError, setImageError] = useState("");
 	const [isSubmitting, setIsSubmitting] = useState(false);
-	const [addedOption, setAddedOption] = useState<string | null>(null);
 
 	useEffect(() => {
 		if (!imageFile) {
@@ -114,26 +107,6 @@ export default function Home() {
 		setImagePreviewUrl(objectUrl);
 		return () => URL.revokeObjectURL(objectUrl);
 	}, [imageFile]);
-
-	const handleInquire = (value: string) => {
-		setSelectedOption(value);
-		document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" });
-		document.getElementById("name")?.focus({ preventScroll: true });
-	};
-
-	const handleAddToCart = (product: Product, option: ProductOption) => {
-		cart.addItem({
-			kind: "simple_product",
-			productId: `${product.id}__${option.label}`.toLowerCase().replace(/[^a-z0-9]+/g, "_"),
-			name: `${product.name} — ${option.label}`,
-			quantity: 1,
-			unitPriceCents: option.price * 100,
-			config: { description: `${product.name} — ${option.label}` },
-		});
-		const key = optionValue(product.name, option);
-		setAddedOption(key);
-		setTimeout(() => setAddedOption((current) => (current === key ? null : current)), 1200);
-	};
 
 	const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		const file = event.target.files?.[0] ?? null;
@@ -186,12 +159,10 @@ export default function Home() {
 		}
 
 		const formData = new FormData(form);
-		const subject = `Tumbler Order Inquiry — ${formData.get("product")}`;
+		const subject = "MNH Creations — Custom Request";
 		const body = [
 			`Name: ${formData.get("name")}`,
 			`Email: ${formData.get("email")}`,
-			`Tumbler: ${formData.get("product")}`,
-			`Quantity: ${formData.get("quantity")}`,
 			"",
 			"Details:",
 			(formData.get("message") as string) || "(none provided)",
@@ -308,10 +279,10 @@ export default function Home() {
 									</svg>
 								</div>
 								<h3 className="self-center font-[family-name:var(--font-head)] text-[1.2rem] font-semibold">
-									Custom HTV / Sublimation Shirt
+									Custom Shirts
 								</h3>
 								<p className="min-h-[42px] text-[0.92rem] text-[#7A5C46]">
-									Build your own shirt: garment, size, color, print method, and design &mdash; priced live as you go.
+									Build your own T-Shirt or Performance Shirt: garment, size, color, and design &mdash; priced live as you go.
 								</p>
 								<ul className="mt-2 mb-1 w-full list-none border-t border-[#F4E9D8] p-0">
 									<li className="flex items-baseline justify-between border-b border-[#F4E9D8] py-2.5 font-bold">
@@ -339,41 +310,30 @@ export default function Home() {
 									<p className="min-h-[42px] text-[0.92rem] text-[#7A5C46]">{product.description}</p>
 									<ul className="mt-2 mb-1 w-full list-none border-t border-[#F4E9D8] p-0">
 										{product.options.map((option) => (
-											<li
-												key={option.label}
-												className="flex flex-wrap items-baseline justify-between gap-y-2 border-b border-[#F4E9D8] py-2.5 font-bold"
-											>
+											<li key={option.label} className="flex flex-wrap items-baseline justify-between gap-y-2 border-b border-[#F4E9D8] py-2.5 font-bold">
 												<span>{option.label}</span>
-												<span className="font-[family-name:var(--font-head)] text-[1.05rem] text-[#A85B2E]">
-													${option.price}
-												</span>
-												<button
-													type="button"
-													onClick={() => handleAddToCart(product, option)}
-													className="w-full rounded-full border-2 border-[#C9713D] px-3.5 py-1.5 text-center text-xs font-extrabold text-[#A85B2E] transition hover:bg-[#C9713D] hover:text-white"
-												>
-													{addedOption === optionValue(product.name, option) ? "Added!" : "Add to Cart"}
-												</button>
+												<span className="font-[family-name:var(--font-head)] text-[1.05rem] text-[#A85B2E]">${option.price}</span>
 											</li>
 										))}
 									</ul>
 									<p className="mb-4.5 text-[0.8rem] text-[#7A5C46] italic">+ shipping &amp; handling</p>
-									<button
-										type="button"
-										onClick={() =>
-											handleInquire(
-												product.options.length === 1
-													? optionValue(product.name, product.options[0])
-													: "",
-											)
-										}
-										className="w-full rounded-full border-2 border-[#C9713D] px-6 py-3 text-center text-sm font-extrabold text-[#A85B2E] transition hover:bg-[#C9713D] hover:text-white"
+									<a
+										href={`/tumbler-configurator?productId=${encodeURIComponent(product.id)}`}
+										className="w-full rounded-full bg-[#C9713D] px-6 py-3 text-center text-sm font-extrabold text-white transition hover:bg-[#A85B2E]"
 									>
-										Inquire to Order
-									</button>
+										Customize This Tumbler
+									</a>
 								</article>
 							))}
 						</div>
+
+						<p className="mt-10 text-center text-[#7A5C46]">
+							Need something different?{" "}
+							<a href={`mailto:${CONTACT_EMAIL}`} className="font-extrabold text-[#A85B2E] underline">
+								Contact MNH Creations
+							</a>{" "}
+							for unusual requests.
+						</p>
 					</div>
 				</section>
 
@@ -400,12 +360,12 @@ export default function Home() {
 					<div className="mx-auto grid max-w-[1100px] grid-cols-1 gap-12 px-6 md:grid-cols-[1fr_1.3fr]">
 						<div>
 							<h2 className="font-[family-name:var(--font-head)] text-[clamp(1.7rem,3vw,2.2rem)] font-semibold">
-								Ready to Order?
+								Need Something Different?
 							</h2>
 							<p className="text-[#7A5C46]">
-								Fill out the form and let us know which tumbler you&apos;d like and any
-								customization details. We&apos;ll reach out to confirm your order and
-								shipping cost.
+								Most orders go through our T-Shirt and Tumbler configurators above, with pricing and your
+								cart built in. For anything unusual — a different product, a bulk order, or a custom
+								request — tell us about it here and we&apos;ll reach out.
 							</p>
 							<p className="text-[#7A5C46]">
 								Prefer to email directly?{" "}
@@ -444,41 +404,7 @@ export default function Home() {
 							</div>
 
 							<div className="mb-4 flex flex-col gap-1.5">
-								<label htmlFor="product" className="text-sm font-bold">Tumbler</label>
-								<select
-									id="product"
-									name="product"
-									required
-									value={selectedOption}
-									onChange={(event) => setSelectedOption(event.target.value)}
-									className="rounded-[14px] border-[1.5px] border-[#F4E9D8] bg-[#FFF7EC] px-3 py-2.5 text-[0.95rem] focus:outline-2 focus:outline-[#C9713D] focus:outline-offset-1"
-								>
-									<option value="" disabled>Choose a tumbler...</option>
-									{products.flatMap((product) =>
-										product.options.map((option) => (
-											<option key={optionValue(product.name, option)} value={optionValue(product.name, option)}>
-												{product.name} ({option.label}) — ${option.price}
-											</option>
-										)),
-									)}
-								</select>
-							</div>
-
-							<div className="mb-4 flex flex-col gap-1.5">
-								<label htmlFor="quantity" className="text-sm font-bold">Quantity</label>
-								<input
-									type="number"
-									id="quantity"
-									name="quantity"
-									min={1}
-									defaultValue={1}
-									required
-									className="rounded-[14px] border-[1.5px] border-[#F4E9D8] bg-[#FFF7EC] px-3 py-2.5 text-[0.95rem] focus:outline-2 focus:outline-[#C9713D] focus:outline-offset-1"
-								/>
-							</div>
-
-							<div className="mb-4 flex flex-col gap-1.5">
-								<label htmlFor="message" className="text-sm font-bold">Details (colors, names, design ideas)</label>
+								<label htmlFor="message" className="text-sm font-bold">Tell us what you have in mind</label>
 								<textarea
 									id="message"
 									name="message"
@@ -513,7 +439,7 @@ export default function Home() {
 								disabled={isSubmitting}
 								className="rounded-full bg-[#C9713D] px-6 py-3 text-sm font-extrabold text-white transition hover:bg-[#A85B2E] disabled:cursor-not-allowed disabled:opacity-60"
 							>
-								{isSubmitting ? "Sending..." : "Send Order Inquiry"}
+								{isSubmitting ? "Sending..." : "Send Request"}
 							</button>
 							<p role="status" className="mt-3 min-h-[1.2em] text-[0.88rem] text-[#8A9A5B]">
 								{formNote}

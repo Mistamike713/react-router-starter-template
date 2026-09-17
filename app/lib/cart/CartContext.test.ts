@@ -34,6 +34,14 @@ describe("cartReducer", () => {
 		expect(getCartItemCount(state)).toBe(2);
 	});
 
+	test("a single cart holds custom_shirt and custom_tumbler items together with correct combined totals", () => {
+		let state = createEmptyCartState();
+		state = addItem(state, { kind: "custom_shirt", productId: "x", name: "Custom Shirt", quantity: 1, unitPriceCents: 2500, config: {} });
+		state = addItem(state, { kind: "custom_tumbler", productId: "16oz-snow-globe", name: "Custom Tumbler", quantity: 2, unitPriceCents: 2000, config: {} });
+		expect(state.items.length).toBe(2);
+		expect(getCartSubtotalCents(state)).toBe(2500 + 4000);
+	});
+
 	// TEST 18/19 — Quantity changes recalculate totals; subtotal is correct
 	test("UPDATE_QUANTITY recalculates extended price and cart subtotal", () => {
 		let state = createEmptyCartState();
