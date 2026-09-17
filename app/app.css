@@ -16,3 +16,60 @@ body {
 		color-scheme: dark;
 	}
 }
+
+/*
+ * MNH homepage branding treatment.
+ *
+ * Keep the upper-right logo/circle as a true fixed background layer while
+ * every piece of page content paints above it. This avoids the watermark
+ * drifting over cards/text as the document scrolls and is more reliable on
+ * iOS than background-attachment: fixed.
+ */
+body:has(main#top) div[aria-hidden="true"][style*="radial-gradient"] {
+	top: -4.75rem !important;
+	right: -4.75rem !important;
+	width: 21rem !important;
+	height: 21rem !important;
+	z-index: 0 !important;
+	background: radial-gradient(circle at 38% 42%, #ead8c5 0%, #c77a4c 58%, #a95f38 100%) !important;
+	box-shadow: inset 0 0 0 1px rgb(74 55 40 / 0.05);
+}
+
+body:has(main#top) div[aria-hidden="true"][style*="radial-gradient"] > img[src="/logo.PNG"] {
+	width: 72% !important;
+	height: 72% !important;
+	opacity: 0.22 !important;
+	mix-blend-mode: multiply !important;
+	filter: grayscale(100%) sepia(18%) brightness(0.48) contrast(0.9) !important;
+}
+
+/* Keep all actual homepage UI above the fixed branding layer. */
+body:has(main#top) header,
+body:has(main#top) main,
+body:has(main#top) footer {
+	position: relative;
+	z-index: 1;
+}
+
+/* The logo has been visually moved into the upper-right background circle. */
+body:has(main#top) main#top > section:first-child img[alt^="MNH Creations"] {
+	display: none;
+}
+
+@media (min-width: 640px) {
+	body:has(main#top) div[aria-hidden="true"][style*="radial-gradient"] {
+		top: -5.25rem !important;
+		right: -5.25rem !important;
+		width: 25rem !important;
+		height: 25rem !important;
+	}
+}
+
+@media (min-width: 1024px) {
+	body:has(main#top) div[aria-hidden="true"][style*="radial-gradient"] {
+		top: -6rem !important;
+		right: -6rem !important;
+		width: 29rem !important;
+		height: 29rem !important;
+	}
+}
