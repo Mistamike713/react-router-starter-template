@@ -3,7 +3,9 @@
 	"name": "react-router-starter-template",
 	"main": "./workers/app.ts",
 	"compatibility_date": "2025-10-08",
-	"compatibility_flags": ["nodejs_compat"],
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
 	"observability": {
 		"enabled": true
 	},
@@ -30,5 +32,13 @@
 				}
 			]
 		}
-	}
+	},
+	"d1_databases": [
+		{
+			"binding": "ORDERS_DB",
+			"database_name": "mnhcreations-orders",
+			"database_id": "18a3f502-d2bd-422f-bcf8-9378098839a8",
+			"migrations_dir": "migrations"
+		}
+	]
 }
