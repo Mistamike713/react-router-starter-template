@@ -31,19 +31,26 @@ body:has(main#top) div[aria-hidden="true"][style*="radial-gradient"] {
 	width: 21rem !important;
 	height: 21rem !important;
 	z-index: 0 !important;
-	background: radial-gradient(circle at 38% 42%, #ead8c5 0%, #c77a4c 58%, #a95f38 100%) !important;
-	box-shadow: inset 0 0 0 1px rgb(74 55 40 / 0.05);
+	background: radial-gradient(
+		circle at 38% 42%,
+		#f4e3d7 0%,
+		#edcfbd 50%,
+		#dfad8d 100%
+	) !important;
+	box-shadow:
+		0 0 72px 28px rgb(255 247 236 / 0.32),
+		inset 0 0 0 1px rgb(74 55 40 / 0.025);
 }
 
 body:has(main#top) div[aria-hidden="true"][style*="radial-gradient"] > img[src="/logo.PNG"] {
 	width: 72% !important;
 	height: 72% !important;
-	opacity: 0.22 !important;
+	opacity: 0.36 !important;
 	mix-blend-mode: multiply !important;
-	filter: grayscale(100%) sepia(18%) brightness(0.48) contrast(0.9) !important;
+	filter: grayscale(28%) sepia(24%) saturate(72%) brightness(1.08) contrast(0.68) !important;
 }
 
-/* Keep all actual homepage UI above the fixed branding layer. */
+/* Keep all actual homepage UI above the fixed branding layer at all times. */
 body:has(main#top) header,
 body:has(main#top) main,
 body:has(main#top) footer {
