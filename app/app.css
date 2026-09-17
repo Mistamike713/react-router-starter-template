@@ -15,3 +15,56 @@ body {
 		color-scheme: dark;
 	}
 }
+
+/* MNH homepage hero preview: integrate the logo into the decorative circle. */
+main#top > section:first-child {
+	min-height: 600px;
+}
+
+/* Remove the large standalone hero logo while preserving the header mark. */
+main#top > section:first-child > div:first-child > div > img:first-child {
+	display: none;
+}
+
+/* Pin the decorative circle so the brand artwork remains visible while scrolling. */
+main#top > section:first-child > div[aria-hidden="true"] {
+	position: fixed !important;
+	top: 118px !important;
+	right: -145px !important;
+	width: 500px !important;
+	height: 500px !important;
+	z-index: 0;
+	pointer-events: none;
+	opacity: 0.44 !important;
+	background:
+		linear-gradient(rgba(83, 52, 42, 0.34), rgba(83, 52, 42, 0.34)),
+		url('/logo.PNG') center / 58% auto no-repeat,
+		radial-gradient(circle at 30% 30%, #f0ddca, #b96a49 140%) !important;
+	background-blend-mode: multiply, multiply, normal;
+	filter: saturate(0.72) contrast(1.04);
+}
+
+main#top > section:first-child > div:first-child {
+	position: relative;
+	z-index: 1;
+}
+
+@media (max-width: 640px) {
+	main#top > section:first-child {
+		padding-top: 250px;
+	}
+
+	main#top > section:first-child > div[aria-hidden="true"] {
+		top: 126px !important;
+		right: -160px !important;
+		width: 470px !important;
+		height: 470px !important;
+		background-size: auto, 62% auto, auto !important;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	main#top > section:first-child > div[aria-hidden="true"] {
+		position: absolute !important;
+	}
+}
