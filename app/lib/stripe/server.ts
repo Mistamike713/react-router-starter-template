@@ -1,4 +1,4 @@
-type CheckoutLine = { name: string; quantity: number; unitPriceCents: number };
+type CheckoutLine = { kind: "custom_shirt" | "custom_tumbler"; name: string; quantity: number; unitPriceCents: number };
 
 function append(params: URLSearchParams, key: string, value: string | number | boolean) {
   params.append(key, String(value));
@@ -33,6 +33,8 @@ export async function createStripeCheckoutSession(args: {
   args.lines.forEach((line, index) => {
     append(params, `line_items[${index}][price_data][currency]`, "usd");
     append(params, `line_items[${index}][price_data][product_data][name]`, line.name);
+    append(params, `line_items[${index}][price_data][product_data][tax_code]`, line.kind === "custom_shirt" ? "txcd_30011000" : "txcd_99999999");
+    append(params, `line_items[${index}][price_data][tax_behavior]`, "exclusive");
     append(params, `line_items[${index}][price_data][unit_amount]`, line.unitPriceCents);
     append(params, `line_items[${index}][quantity]`, line.quantity);
   });

@@ -11,7 +11,7 @@ export async function action({ request, context }: Route.ActionArgs) {
     const db = context.cloudflare.env.ORDERS_DB;
     const order = await db.prepare("SELECT * FROM orders WHERE id = ?").bind(orderId).first<any>();
     if (!order || order.status !== "draft") return Response.json({ error: "Order is not available for checkout." }, { status: 409 });
-    const { results } = await db.prepare("SELECT name, quantity, unit_price_cents FROM order_items WHERE order_id = ? ORDER BY created_at").bind(orderId).all<any>();
+    const { results } = await db.prepare("SELECT kind, name, quantity, unit_price_cents FROM order_items WHERE order_id = ? ORDER BY created_at").bind(orderId).all<any>();
     if (!results.length) return Response.json({ error: "Order has no items." }, { status: 400 });
 
     const secretKey = context.cloudflare.env.STRIPE_SECRET_KEY;
@@ -34,7 +34,7 @@ export async function action({ request, context }: Route.ActionArgs) {
       secretKey,
       orderId,
       customerEmail: order.customer_email,
-      lines: results.map((row: any) => ({ name: row.name, quantity: row.quantity, unitPriceCents: row.unit_price_cents })),
+      lines: results.map((row: any) => ({ kind: row.kind, name: row.name, quantity: row.quantity, unitPriceCents: row.unit_price_cents })),
       shippingCents: order.shipping_cents,
       fulfillmentMethod: order.fulfillment_method,
       origin: new URL(request.url).origin,
