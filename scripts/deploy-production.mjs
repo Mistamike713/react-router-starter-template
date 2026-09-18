@@ -5,7 +5,7 @@ import {spawnSync} from 'node:child_process';
 const branch = process.env.WORKERS_CI_BRANCH || process.env.CF_PAGES_BRANCH;
 if (branch && branch !== 'main') throw new Error('Only main may deploy production.');
 const config = JSON.parse(readFileSync('build/server/wrangler.json','utf8'));
-if (config.vars?.MAILING_ORIGIN !== 'https://mnhcreations.com' ||
+if (config.vars?.MAILING_ORIGIN !== 'https://www.mnhcreations.com' ||
     config.d1_databases?.find(db => db.binding === 'ORDERS_DB')?.database_id !== '18a3f502-d2bd-422f-bcf8-9378098839a8') {
   throw new Error('Production deployment requires production origin and database bindings. Rebuild for main.');
 }
