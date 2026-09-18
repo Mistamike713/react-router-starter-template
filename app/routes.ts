@@ -2,6 +2,9 @@ import { type RouteConfig, index, route } from "@react-router/dev/routes";
 
 export default [
 	index("routes/home.tsx"),
+	route("mailing-list", "routes/mailing-list.tsx"),
+	route("mailing-list/confirm", "routes/mailing-list.confirm.tsx"),
+	route("mailing-list/unsubscribe", "routes/mailing-list.unsubscribe.tsx"),
 	route("shirt-configurator", "routes/shirt-configurator.tsx"),
 	route("tumbler-configurator", "routes/tumbler-configurator.tsx"),
 	route("api/upload", "routes/api.upload.ts"),

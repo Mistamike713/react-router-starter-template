@@ -1,52 +1,55 @@
 {
-	"$schema": "./node_modules/wrangler/config-schema.json",
-	"name": "react-router-starter-template",
-	"main": "./workers/app.ts",
-	"compatibility_date": "2025-10-08",
-	"compatibility_flags": [
-		"nodejs_compat"
-	],
-	"observability": {
-		"enabled": true
-	},
-	"upload_source_maps": true,
-	"vars": {
-		"VALUE_FROM_CLOUDFLARE": "Hello from Cloudflare"
-	},
-	"kv_namespaces": [
-		{
-			"binding": "ORDER_UPLOADS",
-			"id": "95f3cf41bf2442a1afe42a03b5cd605e"
-		}
-	],
-	"env": {
-		"preview": {
-			"name": "mnhcreations-preview",
-			"vars": {
-				"VALUE_FROM_CLOUDFLARE": "Hello from Cloudflare"
-			},
-			"kv_namespaces": [
-				{
-					"binding": "ORDER_UPLOADS",
-					"id": "d316248bd7924c54b4280ddc4e66f1e2"
-				}
-			],
-			"d1_databases": [
-				{
-					"binding": "ORDERS_DB",
-					"database_name": "mnhcreations-orders-preview",
-					"database_id": "a038c554-fc0b-4ea9-80ce-db50b9a7ab8d",
-					"migrations_dir": "migrations"
-				}
-			]
-		}
-	},
-	"d1_databases": [
-		{
-			"binding": "ORDERS_DB",
-			"database_name": "mnhcreations-orders",
-			"database_id": "18a3f502-d2bd-422f-bcf8-9378098839a8",
-			"migrations_dir": "migrations"
-		}
-	]
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "react-router-starter-template",
+  "main": "./workers/app.ts",
+  "compatibility_date": "2025-10-08",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "observability": {
+    "enabled": true
+  },
+  "upload_source_maps": true,
+  "vars": {
+    "VALUE_FROM_CLOUDFLARE": "Hello from Cloudflare"
+  },
+  "kv_namespaces": [
+    {
+      "binding": "ORDER_UPLOADS",
+      "id": "95f3cf41bf2442a1afe42a03b5cd605e"
+    }
+  ],
+  "env": {
+    "preview": {
+      "name": "mnhcreations-preview",
+      "vars": {
+        "VALUE_FROM_CLOUDFLARE": "Hello from Cloudflare",
+        "MAILING_ENABLED": "true",
+        "MAILING_ORIGIN": "https://feature-server-orders-stripe-mnhcreations.gjmhts5vv5.workers.dev",
+        "RESEND_SEGMENT_ID": "98c1cb02-5151-4317-89d2-701bd7d01608"
+      },
+      "kv_namespaces": [
+        {
+          "binding": "ORDER_UPLOADS",
+          "id": "d316248bd7924c54b4280ddc4e66f1e2"
+        }
+      ],
+      "d1_databases": [
+        {
+          "binding": "ORDERS_DB",
+          "database_name": "mnhcreations-orders-preview",
+          "database_id": "a038c554-fc0b-4ea9-80ce-db50b9a7ab8d",
+          "migrations_dir": "migrations"
+        }
+      ]
+    }
+  },
+  "d1_databases": [
+    {
+      "binding": "ORDERS_DB",
+      "database_name": "mnhcreations-orders",
+      "database_id": "18a3f502-d2bd-422f-bcf8-9378098839a8",
+      "migrations_dir": "migrations"
+    }
+  ]
 }

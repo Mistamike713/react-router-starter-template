@@ -12,6 +12,8 @@ export async function createStripeCheckoutSession(args: {
   shippingCents: number;
   fulfillmentMethod: "pickup" | "shipping";
   origin: string;
+  customerId?: string;
+  promotionId?: string;
 }) {
   const params = new URLSearchParams();
   append(params, "mode", "payment");
@@ -19,7 +21,12 @@ export async function createStripeCheckoutSession(args: {
   append(params, "cancel_url", `${args.origin}/?checkout=cancelled`);
   append(params, "client_reference_id", args.orderId);
   append(params, "metadata[order_id]", args.orderId);
-  append(params, "customer_email", args.customerEmail);
+  if (args.customerId) {
+    append(params, "customer", args.customerId);
+    append(params, "customer_update[address]", "auto");
+    if (args.fulfillmentMethod === "shipping") append(params, "customer_update[shipping]", "auto");
+  } else append(params, "customer_email", args.customerEmail);
+  if (args.promotionId) append(params, "discounts[0][promotion_code]", args.promotionId);
   append(params, "automatic_tax[enabled]", true);
   append(params, "billing_address_collection", "auto");
 
@@ -31,11 +38,12 @@ export async function createStripeCheckoutSession(args: {
   });
 
   if (args.shippingCents > 0) {
-    const i = args.lines.length;
-    append(params, `line_items[${i}][price_data][currency]`, "usd");
-    append(params, `line_items[${i}][price_data][product_data][name]`, "Shipping");
-    append(params, `line_items[${i}][price_data][unit_amount]`, args.shippingCents);
-    append(params, `line_items[${i}][quantity]`, 1);
+    append(params, "shipping_options[0][shipping_rate_data][type]", "fixed_amount");
+    append(params, "shipping_options[0][shipping_rate_data][fixed_amount][currency]", "usd");
+    append(params, "shipping_options[0][shipping_rate_data][fixed_amount][amount]", args.shippingCents);
+    append(params, "shipping_options[0][shipping_rate_data][display_name]", "Shipping");
+    append(params, "shipping_options[0][shipping_rate_data][tax_behavior]", "exclusive");
+    append(params, "shipping_options[0][shipping_rate_data][tax_code]", "txcd_92010001");
   }
 
   if (args.fulfillmentMethod === "shipping") {
@@ -47,6 +55,7 @@ export async function createStripeCheckoutSession(args: {
     headers: {
       Authorization: `Bearer ${args.secretKey}`,
       "Content-Type": "application/x-www-form-urlencoded",
+      "Idempotency-Key": `checkout/${args.orderId}`,
     },
     body: params,
   });

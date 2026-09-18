@@ -30,6 +30,7 @@ export function CartWidget() {
 	const [contactTouched, setContactTouched] = useState(false);
 	const [checkoutPending, setCheckoutPending] = useState(false);
 	const [checkoutError, setCheckoutError] = useState("");
+	const [couponCode, setCouponCode] = useState("");
 	useEffect(() => setMounted(true), []);
 	const items = cart.state.items;
 	const itemCount = getCartItemCount(cart.state);
@@ -75,7 +76,7 @@ export function CartWidget() {
 			const checkoutResponse = await fetch("/api/checkout", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ orderId: order.orderId }),
+				body: JSON.stringify({ orderId: order.orderId, couponCode: couponCode.trim() }),
 			});
 			const checkout = await checkoutResponse.json() as { checkoutUrl?: string; error?: string };
 			if (!checkoutResponse.ok || !checkout.checkoutUrl) throw new Error(checkout.error || "Unable to start checkout.");
@@ -230,6 +231,12 @@ export function CartWidget() {
 									</div>
 								)}
 
+								<div className="my-4 space-y-2">
+									<label className="block text-sm font-bold" htmlFor="cart-coupon">First-order coupon code</label>
+									<input id="cart-coupon" value={couponCode} onChange={e => setCouponCode(e.target.value)} maxLength={64} className="w-full rounded-xl border p-2 text-sm" placeholder="Your personal code (optional)" />
+									<p className="text-xs">Valid discounts appear in secure checkout. Use the email that received your code.</p>
+									<Link to="/mailing-list" onClick={() => setIsOpen(false)} className="block text-sm font-bold underline">Join the mailing list for 15% off your first order</Link>
+								</div>
 								<div className="mb-1.5 flex flex-col gap-1.5">
 									<label htmlFor="cart-order-notes" className="text-sm font-bold">
 										Notes for MNH Creations
