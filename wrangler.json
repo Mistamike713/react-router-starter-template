@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "react-router-starter-template",
+  "name": "mnhcreations",
   "main": "./workers/app.ts",
   "compatibility_date": "2025-10-08",
   "compatibility_flags": [
@@ -11,7 +11,10 @@
   },
   "upload_source_maps": true,
   "vars": {
-    "VALUE_FROM_CLOUDFLARE": "Hello from Cloudflare"
+    "VALUE_FROM_CLOUDFLARE": "Hello from Cloudflare",
+    "MAILING_ENABLED": "true",
+    "MAILING_ORIGIN": "https://mnhcreations.com",
+    "RESEND_SEGMENT_ID": "2cc65a85-c169-4a3e-9625-eadb42372a55"
   },
   "kv_namespaces": [
     {
