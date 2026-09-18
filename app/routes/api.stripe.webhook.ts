@@ -56,8 +56,7 @@ export async function action({ request, context }: Route.ActionArgs) {
     .bind(event.id).first();
   if (alreadyProcessed) return Response.json({ received: true, duplicate: true });
 
-  if (orderId && SUCCESS_EVENTS.has(event.type)) {
-    if (session.payment_status === "paid" || event.type === "checkout.session.async_payment_succeeded") {
+  if (orderId && (SUCCESS_EVENTS.has(event.type) || event.type === "checkout.session.async_payment_failed" || event.type === "checkout.session.expired")) {
       const order = await db.prepare("SELECT stripe_checkout_session_id FROM orders WHERE id = ?")
         .bind(orderId).first<{ stripe_checkout_session_id?: string }>();
 
@@ -65,6 +64,10 @@ export async function action({ request, context }: Route.ActionArgs) {
         return new Response("Order/session mismatch", { status: 409 });
       }
 
+  }
+
+  if (orderId && SUCCESS_EVENTS.has(event.type)) {
+    if (session.payment_status === "paid" || event.type === "checkout.session.async_payment_succeeded") {
       await db.batch([
         db.prepare(`UPDATE orders
           SET status='paid', stripe_payment_intent_id=?, tax_cents=?, total_cents=?, paid_at=COALESCE(paid_at, ?), updated_at=?
@@ -109,3 +112,4 @@ export async function action({ request, context }: Route.ActionArgs) {
 
   return Response.json({ received: true });
 }
+

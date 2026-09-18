@@ -57,21 +57,22 @@ export function validateAndPriceOrder(input: OrderSubmission): ValidatedOrder {
 
   const items = input.items.map((item) => {
     if (!item || typeof item !== "object" || !item.config) throw new Error("Invalid line item.");
+    if (!Number.isSafeInteger(item.quantity) || item.quantity! < 1) throw new Error("Item quantity must be a positive whole number.");
     if (item.kind === "custom_shirt") {
-      const config = item.config as unknown as ShirtConfiguratorState;
+      const config = { ...item.config, quantity: item.quantity } as unknown as ShirtConfiguratorState;
       const validation = validateShirt(config);
       if (!validation.valid) throw new Error("A shirt configuration is incomplete.");
       const price = computeCustomShirtPrice(config);
       if (!price.valid) throw new Error(price.error);
-      return { ...item, productId: item.productId || config.garmentId || "custom-shirt", name: item.name || "Custom Shirt", quantity: price.quantity, unitPriceCents: price.unitPriceCents, extendedPriceCents: price.extendedPriceCents };
+      return { ...item, config: { ...config }, productId: item.productId || config.garmentId || "custom-shirt", name: item.name || "Custom Shirt", quantity: price.quantity, unitPriceCents: price.unitPriceCents, extendedPriceCents: price.extendedPriceCents };
     }
     if (item.kind === "custom_tumbler") {
-      const config = item.config as unknown as TumblerConfiguratorState;
+      const config = { ...item.config, quantity: item.quantity } as unknown as TumblerConfiguratorState;
       const validation = validateTumbler(config);
       if (!validation.valid) throw new Error("A tumbler configuration is incomplete.");
       const price = computeTumblerPrice(config);
       if (!price.valid) throw new Error(price.error);
-      return { ...item, productId: item.productId || config.productId || "custom-tumbler", name: item.name || "Custom Tumbler", quantity: price.quantity, unitPriceCents: price.unitPriceCents, extendedPriceCents: price.extendedPriceCents };
+      return { ...item, config: { ...config }, productId: item.productId || config.productId || "custom-tumbler", name: item.name || "Custom Tumbler", quantity: price.quantity, unitPriceCents: price.unitPriceCents, extendedPriceCents: price.extendedPriceCents };
     }
     throw new Error("Unsupported line item type.");
   });
@@ -93,3 +94,4 @@ export async function persistDraftOrder(db: D1Database, order: ValidatedOrder): 
   await db.batch(statements);
   return id;
 }
+
