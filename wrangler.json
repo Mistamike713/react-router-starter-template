@@ -14,7 +14,8 @@
     "VALUE_FROM_CLOUDFLARE": "Hello from Cloudflare",
     "MAILING_ENABLED": "true",
     "MAILING_ORIGIN": "https://www.mnhcreations.com",
-    "RESEND_SEGMENT_ID": "2cc65a85-c169-4a3e-9625-eadb42372a55"
+    "RESEND_SEGMENT_ID": "2cc65a85-c169-4a3e-9625-eadb42372a55",
+    "LAUNCH_MODE": "true"
   },
   "kv_namespaces": [
     {
@@ -29,7 +30,8 @@
         "VALUE_FROM_CLOUDFLARE": "Hello from Cloudflare",
         "MAILING_ENABLED": "true",
         "MAILING_ORIGIN": "https://feature-server-orders-stripe-mnhcreations.gjmhts5vv5.workers.dev",
-        "RESEND_SEGMENT_ID": "98c1cb02-5151-4317-89d2-701bd7d01608"
+        "RESEND_SEGMENT_ID": "98c1cb02-5151-4317-89d2-701bd7d01608",
+        "LAUNCH_MODE": "true"
       },
       "kv_namespaces": [
         {
