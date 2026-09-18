@@ -1,8 +1,15 @@
-import { useSearchParams } from "react-router";
+import { redirect, useSearchParams } from "react-router";
 import { SiteHeader } from "~/components/layout/SiteHeader";
 import { TumblerConfigurator } from "~/components/tumbler/TumblerConfigurator";
+import { isLaunchModeEnabled } from "~/lib/launchMode.server";
+import type { Route } from "./+types/tumbler-configurator";
 
 const CONTACT_EMAIL = "info@mnhcreations.com";
+
+export function loader({ context }: Route.LoaderArgs) {
+	if (isLaunchModeEnabled(context.cloudflare.env)) throw redirect("/");
+	return null;
+}
 
 export default function TumblerConfiguratorPage() {
 	const [searchParams] = useSearchParams();

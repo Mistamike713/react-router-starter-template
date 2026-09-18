@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
 import { SiteHeader } from "~/components/layout/SiteHeader";
+import { LaunchLandingPage } from "~/components/launch/LaunchLandingPage";
 import { getMinBasePriceCents } from "~/lib/apparel/config";
 import { formatCents } from "~/lib/apparel/pricing";
 import { getMinTumblerPriceCents } from "~/lib/tumbler/config";
+import { isLaunchModeEnabled } from "~/lib/launchMode.server";
+import type { Route } from "./+types/home";
 
 const CONTACT_EMAIL = "info@mnhcreations.com";
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024; // 8MB, matches the server-side limit
@@ -64,7 +67,20 @@ const steps = [
 	{ title: "Pickup or Delivery", body: "Choose local pickup or shipping — your total updates to match." },
 ];
 
-export default function Home() {
+export function loader({ context }: Route.LoaderArgs) {
+	return { launchMode: isLaunchModeEnabled(context.cloudflare.env) };
+}
+
+export function meta({ data }: Route.MetaArgs) {
+	if (!data?.launchMode) return [];
+	return [
+		{ title: "MNH Creations — Launching October 1" },
+		{ name: "description", content: "MNH Creations launches October 1. Join our mailing list and receive 15% off your first order." },
+	];
+}
+
+export default function Home({ loaderData }: Route.ComponentProps) {
+	const { launchMode } = loaderData;
 	const [formNote, setFormNote] = useState("");
 	const [imageFile, setImageFile] = useState<File | null>(null);
 	const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
@@ -175,10 +191,16 @@ export default function Home() {
 				/>
 			</div>
 
-			<SiteHeader />
+			{launchMode ? (
+				<main id="top">
+					<LaunchLandingPage />
+				</main>
+			) : (
+				<>
+					<SiteHeader />
 
-			<main id="top">
-				<section className="relative overflow-hidden py-20">
+					<main id="top">
+						<section className="relative overflow-hidden py-20">
 					<div className="relative z-10 mx-auto max-w-[1100px] px-6">
 						<div className="max-w-[640px]">
 							<img
@@ -384,6 +406,8 @@ export default function Home() {
 					</p>
 				</div>
 			</footer>
+				</>
+			)}
 		</div>
 	);
 }

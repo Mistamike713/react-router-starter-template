@@ -1,9 +1,13 @@
 import type { Route } from "./+types/api.checkout";
 import { createStripeCheckoutSession } from "../lib/stripe/server";
 import { mailingReady, normalizeEmail, type MailingEnv, type Subscriber } from "../lib/mailing.server";
+import { isLaunchModeEnabled } from "../lib/launchMode.server";
 
 export async function action({ request, context }: Route.ActionArgs) {
   if (request.method !== "POST") return Response.json({ error: "Method not allowed" }, { status: 405 });
+  if (isLaunchModeEnabled(context.cloudflare.env)) {
+    return Response.json({ error: "MNH Creations launches October 1. Join the mailing list for 15% off your first order." }, { status: 403 });
+  }
   try {
     const { orderId, couponCode } = await request.json() as { orderId?: string; couponCode?: string };
     if (!orderId) return Response.json({ error: "Order ID is required." }, { status: 400 });

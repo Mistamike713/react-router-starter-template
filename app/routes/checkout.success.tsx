@@ -1,8 +1,10 @@
 import { useEffect } from "react";
-import { data, Link, useRevalidator } from "react-router";
+import { data, Link, redirect, useRevalidator } from "react-router";
 import type { Route } from "./+types/checkout.success";
+import { isLaunchModeEnabled } from "~/lib/launchMode.server";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
+  if (isLaunchModeEnabled(context.cloudflare.env)) throw redirect("/");
   const sessionId = new URL(request.url).searchParams.get("session_id");
   const order = sessionId
     ? await context.cloudflare.env.ORDERS_DB.prepare("SELECT status FROM orders WHERE stripe_checkout_session_id = ?")
