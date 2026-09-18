@@ -1,6 +1,7 @@
 import { Form, Link, useActionData, useLoaderData, useNavigation } from 'react-router';
 import type { Route } from './+types/mailing-list';
-import { CONSENT, ADDRESS, mailingReady, normalizeEmail, rateLimit, sendConfirmation, type MailingEnv, type Subscriber } from '../lib/mailing.server';
+import { mailingReady, normalizeEmail, rateLimit, sendConfirmation, type MailingEnv, type Subscriber } from '../lib/mailing.server';
+import {CONSENT,ADDRESS} from '../lib/mailing';
 
 export function loader({context}: Route.LoaderArgs) {
  return {enabled:mailingReady(context.cloudflare.env as MailingEnv)};

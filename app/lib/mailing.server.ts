@@ -1,3 +1,4 @@
+import {ADDRESS} from './mailing';
 export type MailingEnv = {
  ORDERS_DB: D1Database;
  RESEND_API_KEY?: string;
@@ -14,8 +15,6 @@ export type Subscriber = {
  coupon_code: string; resend_contact_id: string | null;
 };
 const encoder = new TextEncoder();
-export const ADDRESS = '27075 Riley Rd, Waller, TX 77484';
-export const CONSENT = 'Send me MNH Creations news and offers by email. I can unsubscribe at any time.';
 export function normalizeEmail(value: unknown) {
  if (typeof value !== 'string') return null;
  const email = value.trim().toLowerCase();
