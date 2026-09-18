@@ -1,4 +1,5 @@
 import type { Route } from "./+types/api.upload";
+import { isLaunchModeEnabled } from "~/lib/launchMode.server";
 
 const MAX_FILE_BYTES = 8 * 1024 * 1024; // 8MB
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif", "image/heic", "image/heif"]);
@@ -7,6 +8,13 @@ const RETENTION_SECONDS = 60 * 60 * 24 * 90; // 90 days
 export async function action({ request, context }: Route.ActionArgs) {
 	if (request.method !== "POST") {
 		return Response.json({ error: "Method not allowed" }, { status: 405 });
+	}
+
+	// No publicly accessible pre-launch page (landing page, mailing list,
+	// Stripe webhook) uploads a reference image — this only feeds the
+	// full-homepage contact form and the (already-gated) configurators.
+	if (isLaunchModeEnabled(context.cloudflare.env)) {
+		return Response.json({ error: "MNH Creations launches October 1. Join the mailing list for 15% off your first order." }, { status: 403 });
 	}
 
 	const formData = await request.formData();

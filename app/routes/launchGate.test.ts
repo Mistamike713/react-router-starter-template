@@ -11,6 +11,9 @@ import { loader as tumblerLoader } from "./tumbler-configurator";
 import { loader as checkoutSuccessLoader } from "./checkout.success";
 import { action as ordersAction } from "./api.orders";
 import { action as checkoutAction } from "./api.checkout";
+import { action as uploadAction } from "./api.upload";
+import { action as artworkUploadAction } from "./api.artwork-upload";
+import { loader as uploadsKeyLoader } from "./uploads.$key";
 
 function ctx(env: Record<string, unknown>) {
 	return { context: { cloudflare: { env } }, params: {} } as any;
@@ -55,7 +58,7 @@ describe("launch mode ON", () => {
 		});
 		const response = await ordersAction({ request, ...ctx(env) } as any);
 		expect(response.status).toBe(403);
-		const body = await response.json();
+		const body = (await response.json()) as { error: string };
 		expect(body.error).toMatch(/october/i);
 	});
 
@@ -66,6 +69,27 @@ describe("launch mode ON", () => {
 		});
 		const response = await checkoutAction({ request, ...ctx(env) } as any);
 		expect(response.status).toBe(403);
+	});
+
+	test("the tumbler reference-image upload endpoint is rejected — no public pre-launch page uses it", async () => {
+		const request = new Request("https://mnhcreations.com/api/upload", { method: "POST" });
+		const response = await uploadAction({ request, ...ctx(env) } as any);
+		expect(response.status).toBe(403);
+	});
+
+	test("the configurator artwork-upload endpoint is rejected — no public pre-launch page uses it", async () => {
+		const request = new Request("https://mnhcreations.com/api/artwork-upload", { method: "POST" });
+		const response = await artworkUploadAction({ request, ...ctx(env) } as any);
+		expect(response.status).toBe(403);
+	});
+
+	test("retrieval of already-uploaded assets is NOT gated (only creation is)", async () => {
+		const env2 = { ...env, ORDER_UPLOADS: { getWithMetadata: async () => ({ value: null, metadata: null }) } };
+		const response = await uploadsKeyLoader({ params: { key: "some-key" }, context: { cloudflare: { env: env2 } } } as any).catch((r: unknown) => r);
+		// Untouched behavior: an unknown key still 404s, not 403 — proving the
+		// launch gate was never consulted for this route.
+		expect(response).toBeInstanceOf(Response);
+		expect((response as Response).status).toBe(404);
 	});
 });
 
@@ -83,5 +107,12 @@ describe("launch mode OFF", () => {
 
 	test("tumbler-configurator route does not redirect", async () => {
 		expect(await tumblerLoader(ctx(env))).toBeNull();
+	});
+
+	test("upload endpoints are reachable again (reach normal validation, not the launch 403)", async () => {
+		const uploadResponse = await uploadAction({ request: new Request("https://mnhcreations.com/api/upload", { method: "POST", body: new FormData() }), ...ctx(env) } as any);
+		expect(uploadResponse.status).not.toBe(403);
+		const artworkResponse = await artworkUploadAction({ request: new Request("https://mnhcreations.com/api/artwork-upload", { method: "POST", body: new FormData() }), ...ctx(env) } as any);
+		expect(artworkResponse.status).not.toBe(403);
 	});
 });
