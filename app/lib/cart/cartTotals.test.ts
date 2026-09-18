@@ -111,7 +111,7 @@ describe("cart totals recompute correctly across state changes", () => {
 		state = cartReducer(state, { type: "DUPLICATE_ITEM", id });
 
 		expect(state.items.length).toBe(2);
-		expect(state.items[1].config).toEqual({ finishOptionId: "snow_globe" });
+		expect(state.items[1].config).toEqual({ finishOptionId: "snow_globe", quantity: 1 });
 		expect(getCartSubtotalCents(state)).toBe(4000);
 	});
 });

@@ -22,7 +22,7 @@ describe("cartReducer", () => {
 			config: { sizeId: "adult_xl", colorId: "black" },
 		});
 		expect(state.items[0].extendedPriceCents).toBe(7000);
-		expect(state.items[0].config).toEqual({ sizeId: "adult_xl", colorId: "black" });
+		expect(state.items[0].config).toEqual({ sizeId: "adult_xl", colorId: "black", quantity: 2 });
 	});
 
 	// TEST 17 — Existing MNH products can be added to the same cart

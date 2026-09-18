@@ -367,6 +367,11 @@ export default function Home() {
 				</section>
 			</main>
 
+			<section className="bg-[#F4E9D8] px-6 py-12 text-center text-[#4A3728]">
+				<h2 className="text-3xl font-bold">Something special for your first order.</h2>
+				<p className="mx-auto my-4 max-w-xl">Join the MNH Creations mailing list for new designs, shop news, and 15% off your first order when you confirm your email.</p>
+				<a href="/mailing-list" className="inline-block rounded-full bg-[#C9713D] px-7 py-3 font-bold text-white">Join & get 15% off</a>
+			</section>
 			<footer className="bg-[#4A3728] py-6 text-[#F4E9D8]">
 				<div className="mx-auto flex max-w-[1100px] flex-wrap items-center justify-between gap-1.5 px-6 text-sm">
 					<div>

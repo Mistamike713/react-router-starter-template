@@ -44,6 +44,10 @@ function generateId(): string {
 	return `cartitem_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
 }
 
+function quantityConfig(item: NewCartItemInput, quantity: number) {
+	return item.kind === "simple_product" ? item.config : { ...item.config, quantity };
+}
+
 function buildItem(input: NewCartItemInput, id: string, now: number): CartItem {
 	const quantity = Math.max(1, Math.round(Number(input.quantity) || 1));
 	const unitPriceCents = Math.max(0, Math.round(Number(input.unitPriceCents) || 0));
@@ -57,7 +61,7 @@ function buildItem(input: NewCartItemInput, id: string, now: number): CartItem {
 		extendedPriceCents: unitPriceCents * quantity,
 		reviewRequired: Boolean(input.reviewRequired),
 		reviewReasons: input.reviewReasons ? [...input.reviewReasons] : [],
-		config: input.config ?? {},
+		config: quantityConfig(input, quantity),
 		addedAt: now,
 		updatedAt: now,
 	};
@@ -66,7 +70,7 @@ function buildItem(input: NewCartItemInput, id: string, now: number): CartItem {
 export function cartReducer(state: CartState, action: CartAction): CartState {
 	switch (action.type) {
 		case "HYDRATE":
-			return action.state;
+			return { ...action.state, items: action.state.items.map((item) => ({ ...item, config: quantityConfig(item, item.quantity), extendedPriceCents: item.unitPriceCents * item.quantity })) };
 
 		case "ADD_ITEM": {
 			const now = Date.now();
@@ -83,7 +87,7 @@ export function cartReducer(state: CartState, action: CartAction): CartState {
 				items: state.items.map((item) => {
 					if (item.id !== action.id) return item;
 					const quantity = Math.max(1, Math.round(Number(action.quantity) || 1));
-					return { ...item, quantity, extendedPriceCents: item.unitPriceCents * quantity, updatedAt: Date.now() };
+					return { ...item, quantity, config: quantityConfig(item, quantity), extendedPriceCents: item.unitPriceCents * quantity, updatedAt: Date.now() };
 				}),
 			};
 
@@ -97,6 +101,7 @@ export function cartReducer(state: CartState, action: CartAction): CartState {
 					const unitPriceCents = Math.max(0, Math.round(Number(merged.unitPriceCents) || 0));
 					return {
 						...merged,
+						config: quantityConfig(merged, quantity),
 						id: item.id,
 						quantity,
 						unitPriceCents,
@@ -256,3 +261,4 @@ export function useCart(): CartContextValue {
 	if (!ctx) throw new Error("useCart must be used within a CartProvider");
 	return ctx;
 }
+
