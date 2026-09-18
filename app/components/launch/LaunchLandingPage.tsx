@@ -13,7 +13,7 @@ const CONTACT_EMAIL = "info@mnhcreations.com";
 
 export function LaunchLandingPage() {
 	return (
-		<div className="relative z-10 mx-auto flex min-h-[calc(100dvh-2rem)] max-w-[720px] flex-col items-center justify-center px-6 py-20 text-center">
+		<div className="relative z-10 mx-auto flex min-h-[100dvh] max-w-[720px] flex-col items-center px-6 pt-72 pb-20 text-center sm:pt-80 lg:pt-[21rem]">
 			<p className="mb-3 text-xs font-extrabold tracking-[2px] text-[#8A9A5B] uppercase">MNH Creations</p>
 
 			<h1 className="font-[family-name:var(--font-head)] text-[clamp(2rem,6vw,3.2rem)] leading-[1.15] font-semibold text-[#4A3728]">
