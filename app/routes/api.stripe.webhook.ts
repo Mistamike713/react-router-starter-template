@@ -1,5 +1,6 @@
 import type { Route } from "./+types/api.stripe.webhook";
 import { verifyStripeWebhook } from "../lib/stripe/webhook";
+import { sendPaidOrderNotifications } from "../lib/orders/notifications.server";
 
 type StripeCheckoutSession = {
   id: string;
@@ -83,6 +84,7 @@ export async function action({ request, context }: Route.ActionArgs) {
         db.prepare("INSERT INTO stripe_events (event_id, event_type, order_id, processed_at) VALUES (?, ?, ?, ?)")
           .bind(event.id, event.type, orderId, now),
       ]);
+      await sendPaidOrderNotifications(context.cloudflare.env, orderId);
       return Response.json({ received: true });
     }
   }
