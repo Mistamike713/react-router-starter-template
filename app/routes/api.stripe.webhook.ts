@@ -1,5 +1,6 @@
 import type { Route } from "./+types/api.stripe.webhook";
 import { verifyStripeWebhook } from "../lib/stripe/webhook";
+import { sendPaidOrderNotifications } from "../lib/orders/notifications.server";
 
 type StripeCheckoutSession = {
   id: string;
@@ -68,21 +69,24 @@ export async function action({ request, context }: Route.ActionArgs) {
 
   if (orderId && SUCCESS_EVENTS.has(event.type)) {
     if (session.payment_status === "paid" || event.type === "checkout.session.async_payment_succeeded") {
-      await db.batch([
-        db.prepare(`UPDATE orders
-          SET status='paid', stripe_payment_intent_id=?, tax_cents=?, total_cents=?, paid_at=COALESCE(paid_at, ?), updated_at=?
-          WHERE id=? AND status IN ('checkout_created','paid')`)
-          .bind(
-            session.payment_intent || null,
-            session.total_details?.amount_tax ?? 0,
-            session.amount_total ?? null,
-            now,
-            now,
-            orderId,
-          ),
-        db.prepare("INSERT INTO stripe_events (event_id, event_type, order_id, processed_at) VALUES (?, ?, ?, ?)")
-          .bind(event.id, event.type, orderId, now),
-      ]);
+      await db.prepare(`UPDATE orders
+        SET status='paid', stripe_payment_intent_id=?, tax_cents=?, total_cents=?, paid_at=COALESCE(paid_at, ?), updated_at=?
+        WHERE id=? AND status IN ('checkout_created','paid')`)
+        .bind(
+          session.payment_intent || null,
+          session.total_details?.amount_tax ?? 0,
+          session.amount_total ?? null,
+          now,
+          now,
+          orderId,
+        ).run();
+
+      // Record the Stripe event only after both transactional emails are accepted.
+      // If Resend is temporarily unavailable, Stripe retries this webhook. Stable
+      // Resend idempotency keys prevent duplicate owner/customer emails on retry.
+      await sendPaidOrderNotifications(context.cloudflare.env, orderId);
+      await db.prepare("INSERT INTO stripe_events (event_id, event_type, order_id, processed_at) VALUES (?, ?, ?, ?)")
+        .bind(event.id, event.type, orderId, now).run();
       return Response.json({ received: true });
     }
   }
