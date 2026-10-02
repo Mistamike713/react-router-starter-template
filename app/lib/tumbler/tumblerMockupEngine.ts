@@ -1,3 +1,5 @@
+import { fitArtworkToArea } from "~/lib/mockupPlacement";
+
 // ============================================================================
 // Interactive tumbler wrap editor engine.
 //
@@ -148,13 +150,12 @@ export class TumblerWrapEditorEngine {
 	setArtworkImage(image: HTMLImageElement) {
 		this.artworkImage = image;
 		this.artworkAspect = image.naturalWidth ? image.naturalWidth / image.naturalHeight : 1;
-		const defaultWidthIn = Math.min(this.wrapWidthIn * 0.85, this.wrapWidthIn);
-		const defaultHeightIn = this.aspectLocked ? defaultWidthIn / this.artworkAspect : Math.min(this.wrapHeightIn * 0.85, this.wrapHeightIn);
+		const defaultSize = fitArtworkToArea(this.artworkAspect, this.wrapWidthIn, this.wrapHeightIn, 0.7);
 		this.placement = {
 			centerXIn: this.wrapWidthIn / 2,
 			centerYIn: this.wrapHeightIn / 2,
-			widthIn: Math.min(defaultWidthIn, this.wrapWidthIn),
-			heightIn: Math.min(defaultHeightIn, this.wrapHeightIn),
+			widthIn: defaultSize.widthIn,
+			heightIn: defaultSize.heightIn,
 		};
 		this._clampCenter();
 		this.render();
@@ -366,8 +367,9 @@ export function renderCylinderPreview(
 	ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 	ctx.clearRect(0, 0, cssWidth, cssHeight);
 
-	if (options.mockupPhoto) {
-		renderPhotographicTumbler(ctx, cssWidth, cssHeight, options);
+	const mockupPhoto = options.mockupPhoto;
+	if (mockupPhoto) {
+		renderPhotographicTumbler(ctx, cssWidth, cssHeight, { ...options, mockupPhoto });
 		return;
 	}
 

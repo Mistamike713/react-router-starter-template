@@ -1,4 +1,5 @@
 import { loadMockupPhoto } from "~/lib/mockupPhoto";
+import { fitArtworkToArea } from "~/lib/mockupPlacement";
 
 // ============================================================================
 // Interactive shirt mockup editor engine.
@@ -94,6 +95,7 @@ export class MockupEditorEngine {
 		this.garmentColorHex = options.garmentColorHex || "#FFFFFF";
 		void loadMockupPhoto(this.side === "front" ? "shirt-front" : "shirt-back").then((photo) => {
 			this.mockupPhoto = photo;
+			this._layout();
 			this.render();
 		});
 
@@ -122,10 +124,18 @@ export class MockupEditorEngine {
 		this.cssWidth = cssWidth;
 		this.cssHeight = cssHeight;
 
-		// Printable area occupies a region roughly over the chest, sized to fit
-		// within a comfortable box regardless of the shirt's drawn proportions.
-		const boxWidthPx = cssWidth * 0.42;
-		const boxHeightPx = cssHeight * 0.42;
+		// Anchor the printable area to the photographed torso instead of the
+		// canvas. Generated product photos include different transparent margins,
+		// so canvas percentages can make an otherwise-centered design look offset.
+		const shirtRect = getShirtPhotoRect(cssWidth, cssHeight, this.mockupPhoto);
+		const printableZone = {
+			x: shirtRect.x + shirtRect.width * 0.31,
+			y: shirtRect.y + shirtRect.height * (this.side === "back" ? 0.23 : 0.27),
+			width: shirtRect.width * 0.38,
+			height: shirtRect.height * 0.47,
+		};
+		const boxWidthPx = printableZone.width;
+		const boxHeightPx = printableZone.height;
 		const pxPerInchW = boxWidthPx / this.maxWidthIn;
 		const pxPerInchH = boxHeightPx / this.maxHeightIn;
 		this.pxPerInch = Math.min(pxPerInchW, pxPerInchH);
@@ -133,8 +143,8 @@ export class MockupEditorEngine {
 		const printableWidthPx = this.maxWidthIn * this.pxPerInch;
 		const printableHeightPx = this.maxHeightIn * this.pxPerInch;
 		this.printableRectPx = {
-			x: (cssWidth - printableWidthPx) / 2,
-			y: cssHeight * (this.side === "back" ? 0.24 : 0.3),
+			x: printableZone.x + (printableZone.width - printableWidthPx) / 2,
+			y: printableZone.y + (printableZone.height - printableHeightPx) / 2,
 			width: printableWidthPx,
 			height: printableHeightPx,
 		};
@@ -172,13 +182,12 @@ export class MockupEditorEngine {
 	setArtworkImage(image: HTMLImageElement) {
 		this.artworkImage = image;
 		this.artworkAspect = image.naturalWidth ? image.naturalWidth / image.naturalHeight : 1;
-		const defaultWidthIn = Math.min(this.maxWidthIn * 0.6, this.maxWidthIn);
-		const defaultHeightIn = this.aspectLocked ? defaultWidthIn / this.artworkAspect : Math.min(this.maxHeightIn * 0.6, this.maxHeightIn);
+		const defaultSize = fitArtworkToArea(this.artworkAspect, this.maxWidthIn, this.maxHeightIn, 0.5);
 		this.placement = {
 			centerXIn: this.maxWidthIn / 2,
 			centerYIn: this.maxHeightIn / 2,
-			widthIn: Math.min(defaultWidthIn, this.maxWidthIn),
-			heightIn: Math.min(defaultHeightIn, this.maxHeightIn),
+			widthIn: defaultSize.widthIn,
+			heightIn: defaultSize.heightIn,
 		};
 		this._clampCenter();
 		this.render();
@@ -404,11 +413,7 @@ function drawPhotographicShirt(
 		drawShirtSilhouette(ctx, width, height, colorHex, side);
 		return;
 	}
-	const scale = Math.min((width * 0.96) / photo.width, (height * 0.96) / photo.height);
-	const drawWidth = photo.width * scale;
-	const drawHeight = photo.height * scale;
-	const x = (width - drawWidth) / 2;
-	const y = (height - drawHeight) / 2;
+	const { x, y, width: drawWidth, height: drawHeight } = getShirtPhotoRect(width, height, photo);
 
 	// Tint the white photo while retaining the original fabric highlights and folds.
 	const tinted = document.createElement("canvas");
@@ -426,6 +431,14 @@ function drawPhotographicShirt(
 	tintedContext.globalCompositeOperation = "multiply";
 	tintedContext.drawImage(photo, 0, 0);
 	ctx.drawImage(tinted, x, y, drawWidth, drawHeight);
+}
+
+function getShirtPhotoRect(width: number, height: number, photo: HTMLCanvasElement | null) {
+	if (!photo) return { x: width * 0.02, y: height * 0.02, width: width * 0.96, height: height * 0.96 };
+	const scale = Math.min((width * 0.96) / photo.width, (height * 0.96) / photo.height);
+	const drawWidth = photo.width * scale;
+	const drawHeight = photo.height * scale;
+	return { x: (width - drawWidth) / 2, y: (height - drawHeight) / 2, width: drawWidth, height: drawHeight };
 }
 
 function drawShirtSilhouette(ctx: CanvasRenderingContext2D, width: number, height: number, colorHex: string, side: MockupSide) {
