@@ -129,7 +129,10 @@ export class MockupEditorEngine {
 		// so canvas percentages can make an otherwise-centered design look offset.
 		const shirtRect = getShirtPhotoRect(cssWidth, cssHeight, this.mockupPhoto);
 		const printableZone = {
-			x: shirtRect.x + shirtRect.width * 0.31,
+			// The photographed front torso sits slightly right of the transparent
+			// image bounds; compensate for that so the box follows the garment,
+			// not merely the source canvas.
+			x: shirtRect.x + shirtRect.width * (this.side === "front" ? 0.34 : 0.31),
 			y: shirtRect.y + shirtRect.height * (this.side === "back" ? 0.23 : 0.27),
 			width: shirtRect.width * 0.38,
 			height: shirtRect.height * 0.47,
