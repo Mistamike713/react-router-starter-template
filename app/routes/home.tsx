@@ -1,10 +1,8 @@
 import { useEffect, useState } from "react";
 import { SiteHeader } from "~/components/layout/SiteHeader";
-import { LaunchLandingPage } from "~/components/launch/LaunchLandingPage";
 import { getMinBasePriceCents } from "~/lib/apparel/config";
 import { formatCents } from "~/lib/apparel/pricing";
 import { getMinTumblerPriceCents } from "~/lib/tumbler/config";
-import { isLaunchModeEnabled } from "~/lib/launchMode.server";
 import type { Route } from "./+types/home";
 
 const CONTACT_EMAIL = "info@mnhcreations.com";
@@ -67,20 +65,14 @@ const steps = [
 	{ title: "Pickup or Delivery", body: "Choose local pickup or shipping — your total updates to match." },
 ];
 
-export function loader({ context }: Route.LoaderArgs) {
-	return { launchMode: isLaunchModeEnabled(context.cloudflare.env) };
-}
-
-export function meta({ data }: Route.MetaArgs) {
-	if (!data?.launchMode) return [];
+export function meta() {
 	return [
-		{ title: "MNH Creations — Launching October 1" },
-		{ name: "description", content: "MNH Creations launches October 1. Join our mailing list and receive 15% off your first order." },
+		{ title: "MNH Creations — Custom Shirts, Tumblers & Personalized Gifts" },
+		{ name: "description", content: "Create custom shirts, tumblers, and personalized gifts with MNH Creations." },
 	];
 }
 
-export default function Home({ loaderData }: Route.ComponentProps) {
-	const { launchMode } = loaderData;
+export default function Home() {
 	const [formNote, setFormNote] = useState("");
 	const [imageFile, setImageFile] = useState<File | null>(null);
 	const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
@@ -191,12 +183,6 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 				/>
 			</div>
 
-			{launchMode ? (
-				<main id="top">
-					<LaunchLandingPage />
-				</main>
-			) : (
-				<>
 					<SiteHeader />
 
 					<main id="top">
@@ -406,8 +392,6 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 					</p>
 				</div>
 			</footer>
-				</>
-			)}
 		</div>
 	);
 }
