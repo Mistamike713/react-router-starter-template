@@ -1,3 +1,5 @@
+import { loadMockupPhoto } from "~/lib/mockupPhoto";
+
 // ============================================================================
 // Interactive shirt mockup editor engine.
 //
@@ -54,6 +56,7 @@ export class MockupEditorEngine {
 	private maxWidthIn: number;
 	private maxHeightIn: number;
 	private garmentColorHex: string;
+	private mockupPhoto: HTMLCanvasElement | null = null;
 
 	private aspectLocked = true;
 	private artworkImage: HTMLImageElement | null = null;
@@ -89,6 +92,10 @@ export class MockupEditorEngine {
 		this.maxWidthIn = options.maxWidthIn;
 		this.maxHeightIn = options.maxHeightIn;
 		this.garmentColorHex = options.garmentColorHex || "#FFFFFF";
+		void loadMockupPhoto(this.side === "front" ? "shirt-front" : "shirt-back").then((photo) => {
+			this.mockupPhoto = photo;
+			this.render();
+		});
 
 		this._layout();
 		this._bindEvents();
@@ -117,7 +124,7 @@ export class MockupEditorEngine {
 
 		// Printable area occupies a region roughly over the chest, sized to fit
 		// within a comfortable box regardless of the shirt's drawn proportions.
-		const boxWidthPx = cssWidth * 0.62;
+		const boxWidthPx = cssWidth * 0.42;
 		const boxHeightPx = cssHeight * 0.42;
 		const pxPerInchW = boxWidthPx / this.maxWidthIn;
 		const pxPerInchH = boxHeightPx / this.maxHeightIn;
@@ -325,7 +332,7 @@ export class MockupEditorEngine {
 	render() {
 		const ctx = this.ctx;
 		ctx.clearRect(0, 0, this.cssWidth, this.cssHeight);
-		drawShirtSilhouette(ctx, this.cssWidth, this.cssHeight, this.garmentColorHex, this.side);
+		drawPhotographicShirt(ctx, this.cssWidth, this.cssHeight, this.garmentColorHex, this.side, this.mockupPhoto);
 
 		const pr = this.printableRectPx;
 		ctx.save();
@@ -383,6 +390,42 @@ function drawHandle(ctx: CanvasRenderingContext2D, x: number, y: number) {
 	ctx.lineWidth = 2;
 	ctx.strokeStyle = "#C9713D";
 	ctx.stroke();
+}
+
+function drawPhotographicShirt(
+	ctx: CanvasRenderingContext2D,
+	width: number,
+	height: number,
+	colorHex: string,
+	side: MockupSide,
+	photo: HTMLCanvasElement | null,
+) {
+	if (!photo) {
+		drawShirtSilhouette(ctx, width, height, colorHex, side);
+		return;
+	}
+	const scale = Math.min((width * 0.96) / photo.width, (height * 0.96) / photo.height);
+	const drawWidth = photo.width * scale;
+	const drawHeight = photo.height * scale;
+	const x = (width - drawWidth) / 2;
+	const y = (height - drawHeight) / 2;
+
+	// Tint the white photo while retaining the original fabric highlights and folds.
+	const tinted = document.createElement("canvas");
+	tinted.width = photo.width;
+	tinted.height = photo.height;
+	const tintedContext = tinted.getContext("2d");
+	if (!tintedContext) {
+		ctx.drawImage(photo, x, y, drawWidth, drawHeight);
+		return;
+	}
+	tintedContext.drawImage(photo, 0, 0);
+	tintedContext.globalCompositeOperation = "source-in";
+	tintedContext.fillStyle = colorHex;
+	tintedContext.fillRect(0, 0, tinted.width, tinted.height);
+	tintedContext.globalCompositeOperation = "multiply";
+	tintedContext.drawImage(photo, 0, 0);
+	ctx.drawImage(tinted, x, y, drawWidth, drawHeight);
 }
 
 function drawShirtSilhouette(ctx: CanvasRenderingContext2D, width: number, height: number, colorHex: string, side: MockupSide) {
