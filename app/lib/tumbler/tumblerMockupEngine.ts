@@ -353,6 +353,7 @@ export function renderCylinderPreview(
 		wrapWidthIn: number;
 		wrapHeightIn: number;
 		bodyColorHex: string;
+		mockupPhoto?: HTMLCanvasElement | null;
 	},
 ) {
 	const ctx = canvas.getContext("2d");
@@ -364,6 +365,11 @@ export function renderCylinderPreview(
 	canvas.height = cssHeight * dpr;
 	ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 	ctx.clearRect(0, 0, cssWidth, cssHeight);
+
+	if (options.mockupPhoto) {
+		renderPhotographicTumbler(ctx, cssWidth, cssHeight, options);
+		return;
+	}
 
 	const bodyWidth = cssWidth * 0.46;
 	const bodyHeight = cssHeight * 0.82;
@@ -411,6 +417,77 @@ export function renderCylinderPreview(
 	ctx.lineWidth = 2;
 	ctx.strokeStyle = "rgba(74,55,40,0.4)";
 	ctx.stroke();
+	ctx.restore();
+}
+
+function renderPhotographicTumbler(
+	ctx: CanvasRenderingContext2D,
+	cssWidth: number,
+	cssHeight: number,
+	options: {
+		artworkImage: HTMLImageElement | null;
+		placement: PlacementState | null;
+		wrapWidthIn: number;
+		wrapHeightIn: number;
+		bodyColorHex: string;
+		mockupPhoto: HTMLCanvasElement;
+	},
+) {
+	const photo = options.mockupPhoto;
+	const scale = Math.min((cssWidth * 0.58) / photo.width, (cssHeight * 0.88) / photo.height);
+	const photoWidth = photo.width * scale;
+	const photoHeight = photo.height * scale;
+	const photoX = (cssWidth - photoWidth) / 2;
+	const photoY = (cssHeight - photoHeight) / 2;
+
+	if (options.bodyColorHex.toLowerCase() === "#ffffff") {
+		ctx.drawImage(photo, photoX, photoY, photoWidth, photoHeight);
+	} else {
+		const tinted = document.createElement("canvas");
+		tinted.width = photo.width;
+		tinted.height = photo.height;
+		const tintedContext = tinted.getContext("2d");
+		if (tintedContext) {
+			tintedContext.drawImage(photo, 0, 0);
+			tintedContext.globalCompositeOperation = "source-in";
+			tintedContext.fillStyle = options.bodyColorHex;
+			tintedContext.fillRect(0, 0, tinted.width, tinted.height);
+			tintedContext.globalCompositeOperation = "multiply";
+			tintedContext.drawImage(photo, 0, 0);
+			ctx.drawImage(tinted, photoX, photoY, photoWidth, photoHeight);
+		} else {
+			ctx.drawImage(photo, photoX, photoY, photoWidth, photoHeight);
+		}
+	}
+
+	if (!options.artworkImage || !options.placement) return;
+
+	// Map the edited flat wrap to the front-facing portion of the photographed cup.
+	const bodyX = photoX + photoWidth * 0.16;
+	const bodyY = photoY + photoHeight * 0.16;
+	const bodyWidth = photoWidth * 0.68;
+	const bodyHeight = photoHeight * 0.70;
+	const radius = bodyWidth * 0.16;
+	ctx.save();
+	roundedRectPath(ctx, bodyX, bodyY, bodyWidth, bodyHeight, radius);
+	ctx.clip();
+	const scaleX = bodyWidth / options.wrapWidthIn;
+	const scaleY = bodyHeight / options.wrapHeightIn;
+	const p = options.placement;
+	const drawWidth = p.widthIn * scaleX;
+	const drawHeight = p.heightIn * scaleY;
+	const drawX = bodyX + p.centerXIn * scaleX - drawWidth / 2;
+	const drawY = bodyY + p.centerYIn * scaleY - drawHeight / 2;
+	ctx.drawImage(options.artworkImage, drawX, drawY, drawWidth, drawHeight);
+
+	// Subtle cylindrical shading keeps the editable artwork seated on the cup.
+	const shade = ctx.createLinearGradient(bodyX, 0, bodyX + bodyWidth, 0);
+	shade.addColorStop(0, "rgba(0,0,0,0.18)");
+	shade.addColorStop(0.2, "rgba(0,0,0,0)");
+	shade.addColorStop(0.8, "rgba(0,0,0,0)");
+	shade.addColorStop(1, "rgba(0,0,0,0.18)");
+	ctx.fillStyle = shade;
+	ctx.fillRect(bodyX, bodyY, bodyWidth, bodyHeight);
 	ctx.restore();
 }
 

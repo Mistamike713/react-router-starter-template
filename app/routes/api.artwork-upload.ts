@@ -15,7 +15,6 @@
 // ============================================================================
 
 import type { Route } from "./+types/api.artwork-upload";
-import { isLaunchModeEnabled } from "~/lib/launchMode.server";
 
 const MAX_FILE_BYTES = 25 * 1024 * 1024; // 25MB
 const ALLOWED_TYPES = new Set(["image/png", "image/jpeg", "image/svg+xml", "application/pdf"]);
@@ -30,11 +29,6 @@ export async function action({ request, context }: Route.ActionArgs) {
 		return Response.json({ error: "Method not allowed" }, { status: 405 });
 	}
 
-	// No publicly accessible pre-launch page uses this — only the (already
-	// redirected while LAUNCH_MODE is on) shirt/tumbler configurators do.
-	if (isLaunchModeEnabled(context.cloudflare.env)) {
-		return Response.json({ error: "MNH Creations launches October 1. Join the mailing list for 15% off your first order." }, { status: 403 });
-	}
 
 	const formData = await request.formData();
 	const file = formData.get("file");

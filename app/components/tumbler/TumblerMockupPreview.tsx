@@ -6,7 +6,8 @@
 // on every prop change (no engine/state of its own).
 // ============================================================================
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { loadMockupPhoto } from "~/lib/mockupPhoto";
 import { renderCylinderPreview, type PlacementState } from "~/lib/tumbler/tumblerMockupEngine";
 
 type TumblerMockupPreviewProps = {
@@ -20,11 +21,20 @@ type TumblerMockupPreviewProps = {
 export function TumblerMockupPreview({ artworkUrl, placement, wrapWidthIn, wrapHeightIn, bodyColorHex }: TumblerMockupPreviewProps) {
 	const canvasRef = useRef<HTMLCanvasElement | null>(null);
 	const imageRef = useRef<HTMLImageElement | null>(null);
+	const [mockupPhoto, setMockupPhoto] = useState<HTMLCanvasElement | null>(null);
+
+	useEffect(() => {
+		let active = true;
+		void loadMockupPhoto("tumbler").then((photo) => {
+			if (active) setMockupPhoto(photo);
+		}).catch(() => undefined);
+		return () => { active = false; };
+	}, []);
 
 	useEffect(() => {
 		const canvas = canvasRef.current;
 		if (!canvas) return;
-		const draw = () => renderCylinderPreview(canvas, { artworkImage: imageRef.current, placement, wrapWidthIn, wrapHeightIn, bodyColorHex });
+		const draw = () => renderCylinderPreview(canvas, { artworkImage: imageRef.current, placement, wrapWidthIn, wrapHeightIn, bodyColorHex, mockupPhoto });
 
 		if (!artworkUrl) {
 			imageRef.current = null;
@@ -41,7 +51,7 @@ export function TumblerMockupPreview({ artworkUrl, placement, wrapWidthIn, wrapH
 		} else {
 			draw();
 		}
-	}, [artworkUrl, placement, wrapWidthIn, wrapHeightIn, bodyColorHex]);
+	}, [artworkUrl, placement, wrapWidthIn, wrapHeightIn, bodyColorHex, mockupPhoto]);
 
 	return (
 		<div>
